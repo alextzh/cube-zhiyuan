@@ -1,0 +1,46 @@
+body, html {
+  line-height: 1;
+  font-family: 'PingFang SC', 'STHeitiSC-Light', 'Helvetica-Light', arial, sans-serif, 'Droid Sans Fallback';
+  user-select: none;
+  -webkit-tap-highlight-color: transparent;
+  background: #fff;
+  color: #333333;
+}
+.cube-btn{
+  background: #ff5251!important;
+}
+.cube-btn:active{
+  background: rgba(244,67,54,.5)!important;
+}
+.cube-btn:active::after{
+  border: none!important;
+}
+.cube-toast-icon{
+  line-height: 24px;
+}
+.no_data{
+  position:fixed;
+  top:50px;
+  bottom:0;
+  width:100%;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  z-index: 99;
+}
+.no_data i{
+  font-size:100px;
+  color: #999999;
+}
+.slide-enter-active, .slide-leave-active {
+  transition: all 0.3s;
+}
+.slide-enter, .slide-leave-to {
+  transform: translate3d(100%, 0, 0);
+}
+input[type="submit"],
+input[type="reset"],
+input[type="button"],
+button {  
+  -webkit-appearance: none !important;
+}
