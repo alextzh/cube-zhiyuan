@@ -3,12 +3,10 @@
     <div class="m-container">
       <navbar :title="title" @back="back" :showClose="showClose"></navbar>
       <div class="list">
-        <scroll ref="scroll" class="scroll_list"
-                v-if="noticeList.length > 0"
-                :scrollbar="scrollbarObj"
-                :pullDownRefresh="pullDownRefreshObj"
-                :startY="parseInt(startY)"
-                @pullingDown="onPullingDown">
+        <cube-scroll ref="scroll"
+                     v-if="noticeList.length > 0"
+                     :options="options"
+                     @pulling-down="onPullingDown">
           <li class="item-box" v-for="(item, index) in noticeList" :key="index">
             <div class="item" @click="toDetail(item)">
               <div class="item_left">
@@ -20,7 +18,7 @@
               </div>
             </div>
           </li>
-        </scroll>
+        </cube-scroll>
         <div v-if="hasData">
           <div class="no_data">
             <i class="iconfont icon-nodata"></i>
@@ -33,13 +31,11 @@
 
 <script type="text/ecmascript-6">
   import $ from 'jquery'
-  import Scroll from 'base/scroll/scroll'
   import Navbar from 'base/navbar/navbar'
   import * as API from 'common/js/http'
   import {setNotice} from 'common/js/storage'
   import {getMd5, getBJDate} from 'common/js/tool'
-  import 'weui'
-  import weui from 'weui.js'
+  import {showToast} from 'common/js/cubeTool'
 
   export default {
     data() {
@@ -48,12 +44,16 @@
         showClose: false,
         loading: null,
         noticeList: [],
-        scrollbar: true,
-        scrollbarFade: true,
-        pullDownRefresh: true,
-        pullDownRefreshThreshold: 90,
-        pullDownRefreshStop: 60,
-        startY: 0,
+        options: {
+          pullDownRefresh: {
+            threshold: 90,
+            stop: 40,
+            txt: '刷新成功'
+          },
+          scrollbar: {
+            fade: true
+          }
+        },
         hasData: false
       }
     },
@@ -62,15 +62,6 @@
         const id = this.$route.path.split('/')[2]
         this.id = id
         return id === 'PTGG' ? this.$i18n.t('navigator.systemNotice') : id === 'CPGG' ? this.$i18n.t('navigator.productNotice') : ''
-      },
-      scrollbarObj: function() {
-        return this.scrollbar ? {fade: this.scrollbarFade} : false
-      },
-      pullDownRefreshObj: function() {
-        return this.pullDownRefresh ? {
-          threshold: parseInt(this.pullDownRefreshThreshold),
-          stop: parseInt(this.pullDownRefreshStop)
-        } : false
       },
       netWork() {
         return this.$i18n.t('common.network')
@@ -81,7 +72,12 @@
     },
     created() {
       this.$i18n.locale = this.$route.params.lang === 'zh' ? 'zh' : this.$route.params.lang === 'en' ? 'en' : 'tw'
-      this.loading = weui.loading(this.loadingTip)
+      this.loading = this.$createToast({
+        time: 0,
+        txt: this.loadingTip,
+        mask: true
+      })
+      this.loading.show()
     },
     mounted() {
       setTimeout(() => {
@@ -107,17 +103,12 @@
             'time_stamp': getBJDate().getTime()
           },
           success: (res) => {
+            this.loading.hide()
             if (!res.ret) {
-              weui.toast(res.msg, 500)
+              showToast(res.msg, 'warn')
               this.hasData = true
-              setTimeout(() => {
-                this.loading.hide()
-              }, 20)
               return false
             }
-            setTimeout(() => {
-              this.loading.hide()
-            }, 20)
             const list = res.obj
             this.noticeList = list
             this.hasData = false
@@ -127,7 +118,8 @@
           },
           error: (err) => {
             console.log(err)
-            weui.toast(this.netWork, 500)
+            this.loading.hide()
+            showToast(this.netWork, 'error')
           }
         })
       },
@@ -143,8 +135,7 @@
       }
     },
     components: {
-      Navbar,
-      Scroll
+      Navbar
     }
   }
 </script>
@@ -163,10 +154,6 @@
     top: 50px;
     bottom: 0;
     width: 100%;
-  }
-  .scroll_list {
-    height: 100%;
-    overflow: hidden;
   }
   .item-box {
     padding-bottom: 10px;

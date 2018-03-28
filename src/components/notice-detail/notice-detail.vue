@@ -31,8 +31,6 @@
       this.$i18n.locale = this.$route.params.lang === 'zh' ? 'zh' : this.$route.params.lang === 'en' ? 'en' : 'tw'
       this.curNotice = getNotice()
     },
-    mounted() {
-    },
     methods: {
       back() {
         this.$router.back()
@@ -74,5 +72,6 @@
     font-size: 14px;
     padding: 10px 0;
     white-space: pre-wrap;
+    line-height: 1.5;
   }
 </style>

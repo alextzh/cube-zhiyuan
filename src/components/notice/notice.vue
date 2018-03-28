@@ -32,8 +32,7 @@
   import Navbar from 'base/navbar/navbar'
   import * as API from 'common/js/http'
   import {getMd5, getBJDate} from 'common/js/tool'
-  import 'weui'
-  import weui from 'weui.js'
+  import {showToast} from 'common/js/cubeTool'
 
   export default {
     data() {
@@ -54,7 +53,12 @@
     },
     created() {
       this.$i18n.locale = this.$route.params.lang === 'zh' ? 'zh' : this.$route.params.lang === 'en' ? 'en' : 'tw'
-      this.loading = weui.loading(this.loadingTip)
+      this.loading = this.$createToast({
+        time: 0,
+        txt: this.loadingTip,
+        mask: true
+      })
+      this.loading.show()
     },
     mounted() {
       setTimeout(() => {
@@ -76,24 +80,20 @@
             'time_stamp': getBJDate().getTime()
           },
           success: (res) => {
+            this.loading.hide()
             if (!res.ret) {
-              weui.toast(res.msg, 500)
+              showToast(res.msg, 'warn')
               this.hasData = true
-              setTimeout(() => {
-                this.loading.hide()
-              }, 20)
               return false
             }
-            setTimeout(() => {
-              this.loading.hide()
-            }, 20)
             const list = res.rows
             this.noticeList = list
             this.hasData = false
           },
           error: (err) => {
             console.log(err)
-            weui.toast(this.netWork, 500)
+            this.loading.hide()
+            showToast(this.netWork, 'error')
           }
         })
       },

@@ -3,14 +3,10 @@
     <div class="m-container">
       <navbar :title="$t('navigator.product')" :showClose="showClose" @back="back"></navbar>
       <div class="list">
-        <scroll ref="scroll" class="scroll_list"
-                v-if="productList.length > 0"
-                :scrollbar="scrollbarObj"
-                :pullDownRefresh="pullDownRefreshObj"
-                :pullUpLoad="pullUpLoadObj"
-                :startY="parseInt(startY)"
-                @pullingDown="onPullingDown"
-                @pullingUp="onPullingUp">
+        <cube-scroll ref="scroll"
+                     v-if="productList.length > 0"
+                     :options="options"
+                     @pulling-down="onPullingDown">
           <li class="item-box" v-for="(item, index) in productList" :key="index" @click="toDetail(item)">
             <div class="item">
               <div class="item_head">
@@ -49,7 +45,7 @@
               </div>
             </div>
           </li>
-        </scroll>
+        </cube-scroll>
         <div v-if="hasData">
           <div class="no_data">
             <i class="iconfont icon-nodata"></i>
@@ -62,13 +58,11 @@
 
 <script type="text/ecmascript-6">
   import $ from 'jquery'
-  import Scroll from 'base/scroll/scroll'
   import Navbar from 'base/navbar/navbar'
   import {rendererZhMoneyWan, _normalizeDate, getMd5, getBJDate} from 'common/js/tool'
   import * as API from 'common/js/http'
   import {setProduct, getUserInfo} from 'common/js/storage'
-  import 'weui'
-  import weui from 'weui.js'
+  import {showToast} from 'common/js/cubeTool'
 
   export default{
     name: 'productList',
@@ -78,38 +72,23 @@
         loading: null,
         productList: [],
         pageData: {
-          page: 1,
-          rows: 10,
           status: 'sgz',
           customer_id: ''
         },
-        scrollbar: true,
-        scrollbarFade: true,
-        pullDownRefresh: true,
-        pullDownRefreshThreshold: 90,
-        pullDownRefreshStop: 40,
-        pullUpLoad: true,
-        pullUpLoadThreshold: 0,
-        startY: 0,
-        hasData: false,
-        totalPage: 0
+        options: {
+          pullDownRefresh: {
+            threshold: 90,
+            stop: 40,
+            txt: '刷新成功'
+          },
+          scrollbar: {
+            fade: true
+          }
+        },
+        hasData: false
       }
     },
     computed: {
-      scrollbarObj: function() {
-        return this.scrollbar ? {fade: this.scrollbarFade} : false
-      },
-      pullDownRefreshObj: function() {
-        return this.pullDownRefresh ? {
-          threshold: parseInt(this.pullDownRefreshThreshold),
-          stop: parseInt(this.pullDownRefreshStop)
-        } : false
-      },
-      pullUpLoadObj: function() {
-        return this.pullUpLoad ? {
-          threshold: parseInt(this.pullUpLoadThreshold)
-        } : false
-      },
       loadingTip() {
         return this.$i18n.t('common.loading')
       },
@@ -117,29 +96,14 @@
         return this.$i18n.t('common.network')
       }
     },
-    watch: {
-      scrollbarObj: {
-        handler() {
-          this.rebuildScroll()
-        },
-        deep: true
-      },
-      pullDownRefreshObj: {
-        handler() {
-          this.rebuildScroll()
-        },
-        deep: true
-      },
-      pullUpLoadObj: {
-        handler() {
-          this.rebuildScroll()
-        },
-        deep: true
-      }
-    },
     created() {
       this.$i18n.locale = this.$route.params.lang === 'zh' ? 'zh' : this.$route.params.lang === 'en' ? 'en' : 'tw'
-      this.loading = weui.loading(this.loadingTip)
+      this.loading = this.$createToast({
+        time: 0,
+        txt: this.loadingTip,
+        mask: true
+      })
+      this.loading.show()
       this.pageData.customer_id = getUserInfo().id
     },
     mounted() {
@@ -152,7 +116,6 @@
         this.$router.back()
       },
       _getProductList() {
-        this.pageData.page = 1
         $.ajax({
           type: 'POST',
           url: API.api + '/api/v1/product/baseList',
@@ -164,19 +127,13 @@
             'time_stamp': getBJDate().getTime()
           },
           success: (res) => {
+            this.loading.hide()
             if (!res.ret) {
-              weui.toast(res.msg, 500)
+              showToast(res.msg, 'warn')
               this.hasData = true
-              setTimeout(() => {
-                this.loading.hide()
-              }, 20)
               return false
             }
-            setTimeout(() => {
-              this.loading.hide()
-            }, 20)
             const list = res.obj.list
-            this.totalPage = res.obj.totalPage
             this.productList = this._normalizeList(list)
             this.hasData = false
             setTimeout(() => {
@@ -185,60 +142,14 @@
           },
           error: (err) => {
             console.log(err)
-            weui.toast(this.netWork, 500)
+            this.loading.hide()
+            showToast(this.netWork, 'error')
           }
         })
-      },
-      _getMoreProductList() {
-        this.pageData.page = this.pageData.page + 1
-        if (this.pageData.page > this.totalPage) {
-          // 如果没有新数据
-          setTimeout(() => {
-            this.$refs.scroll.forceUpdate()
-          }, 20)
-        } else {
-          $.ajax({
-            type: 'POST',
-            url: API.api + '/api/v1/product/baseList',
-            data: this.pageData,
-            dataType: 'json',
-            headers: {
-              'content-type': 'application/x-www-form-urlencoded',
-              'secret_key': getMd5(),
-              'time_stamp': getBJDate().getTime()
-            },
-            success: (res) => {
-              if (!res.ret) {
-                weui.toast(res.msg, 500)
-                this.hasData = true
-                return false
-              }
-              const list = res.obj.list
-              this.productList = this.productList.concat(this._normalizeList(list))
-              setTimeout(() => {
-                this.$refs.scroll.forceUpdate()
-              }, 20)
-            },
-            error: (err) => {
-              console.log(err)
-              weui.toast(this.netWork, 500)
-            }
-          })
-        }
       },
       onPullingDown() {
         // 更新数据
         this._getProductList()
-      },
-      onPullingUp() {
-        // 加载更多数据
-        this._getMoreProductList()
-      },
-      rebuildScroll() {
-        this.$nextTick(() => {
-          this.$refs.scroll.destroy()
-          this.$refs.scroll.initScroll()
-        })
       },
       _normalizeList(list) {
         if (list === []) {
@@ -270,7 +181,6 @@
       }
     },
     components: {
-      Scroll,
       Navbar
     }
   }

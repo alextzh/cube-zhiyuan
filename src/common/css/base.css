@@ -18,6 +18,10 @@ body, html {
 .cube-toast-icon{
   line-height: 24px;
 }
+.cube-scroll-content{
+  padding:10px;
+  box-sizing: border-box;
+}
 .no_data{
   position:fixed;
   top:50px;
@@ -41,6 +45,6 @@ body, html {
 input[type="submit"],
 input[type="reset"],
 input[type="button"],
-button {  
+button {
   -webkit-appearance: none !important;
 }
