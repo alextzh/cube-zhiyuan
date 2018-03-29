@@ -76,14 +76,14 @@
             </div>
             <div v-if="flag" style="padding: 0 10px;">
               <div class="input_area">
-                <div class="input_title">{{$t('modifyPlan.changeShare')}}：</div>
-                <div class="input_con">
-                  <input type="number" v-model="purchaseAmt" :placeholder="$t('modifyPlan.tip1')" />
+                <div class="input_form">
+                  <i class="iconfont icon-redeemed"></i>
                   <span class='unit'>万份</span>
+                  <input type="number" v-model="purchaseAmt" :placeholder="$t('modifyPlan.tip1')" />
                 </div>
               </div>
               <div class="btn_area">
-                <button type="submit" :disabled="btnDisabled" :class="{'weui-btn_disabled': btnDisabled}" class="weui-btn weui-btn_primary"><i :class="{'weui-loading': btnLoading}"></i>{{modifyBtnTxt}}</button>
+                <cube-button type="submit" :disabled="btnDisabled">{{modifyBtnTxt}}</cube-button>
               </div>
             </div>
           </form>
@@ -100,8 +100,7 @@
   import $ from 'jquery'
   import * as API from 'common/js/http'
   import Plan from 'common/js/plan'
-  import 'weui'
-  import weui from 'weui.js'
+  import {showPicker, showToast, showAlert, showDialog} from 'common/js/cubeTool'
 
   export default {
     data() {
@@ -114,7 +113,6 @@
         currentProduct: null,
         customer_id: '',
         purchaseAmt: '',
-        btnLoading: false,
         btnDisabled: false,
         flag: false
       }
@@ -152,6 +150,9 @@
       },
       cancel() {
         return this.$i18n.t('common.cancel')
+      },
+      pickerTitle() {
+        return this.$i18n.t('modifyPlan.selectPlan')
       }
     },
     created() {
@@ -194,7 +195,7 @@
               showArr.forEach((item, index) => {
                 item.settlement_time = _normalizeStr(item.settlement_time)
                 pickerArr.push(new Plan({
-                  label: item.name,
+                  text: item.name,
                   value: index
                 }))
               })
@@ -206,33 +207,30 @@
               this.pickerArr = pickerArr
               this.showArr = showArr
               this.currentPlan = showArr[0]
-              this.curValue = pickerArr[0].label
+              this.curValue = pickerArr[0].text
             }
           },
           error: (err) => {
             console.log(err)
-            weui.toast(this.netWork, 500)
+            showToast(this.netWork, 'error')
           }
         })
       },
       // 方案选择
       selectPlan() {
-        weui.picker(this.pickerArr, {
-          container: 'body',
-          defaultValue: [0],
-          onChange: (result) => {
-            console.log('change' + result)
-          },
-          onConfirm: (result) => {
-            this.currentPlan = this.showArr[result]
-            this.curValue = this.pickerArr[result].label
-            if (this.showArr[result].name === this.currentProduct.product_name) {
-              this.flag = false
-            } else {
-              this.flag = true
-            }
-          }
-        })
+        showPicker(this.pickerTitle, this.pickerArr, 0, this.cancel, this.confirm, this.selectPlanFn, this.cancelPlanFn)
+      },
+      cancelPlanFn() {
+        console.log('cancel')
+      },
+      selectPlanFn(selectedVal, selectedIndex, selectedText) {
+        this.currentPlan = this.showArr[selectedIndex]
+        this.curValue = selectedText[0]
+        if (this.showArr[selectedIndex].name === this.currentProduct.product_name) {
+          this.flag = false
+        } else {
+          this.flag = true
+        }
       },
       // 表单提交
       formSubmit() {
@@ -240,25 +238,17 @@
         const param = this.purchaseAmt
         const curPlan = this.currentPlan
         if (this.checkPurchase(that, param)) {
-          weui.confirm(`${this.tip5}${curPlan.name}${param}万份?`, {
-            title: this.modifyTip,
-            buttons: [{
-              label: this.cancel,
-              type: 'default',
-              onClick: () => {
-                console.log('已取消')
-              }
-            }, {
-              label: this.confirm,
-              type: 'primary',
-              onClick: () => {
-                this.btnDisabled = true
-                this.btnLoading = true
-                this.mySubmit(that, param)
-              }
-            }]
-          })
+          showDialog(this.modifyTip, `${this.tip5}${curPlan.name}${param}万份?`, this.confirm, this.cancel, this.confirmFn, this.cancelFn)
         }
+      },
+      confirmFn() {
+        var that = this
+        const param = this.purchaseAmt
+        this.btnDisabled = true
+        this.mySubmit(that, param)
+      },
+      cancelFn() {
+        console.log('cancel')
       },
       // 校验申购金额
       checkPurchase: (that, param) => {
@@ -269,44 +259,16 @@
         var step = curPlan.step_money / 10000
 
         if (!amt) {
-          weui.alert(that.tip1, {
-            title: that.tip,
-            buttons: [{
-              label: that.confirm,
-              type: 'primary',
-              onClick: () => { console.log('ok') }
-            }]
-          })
+          showAlert(that.tip, that.tip1, that.confirm)
           return false
         } else if (amt < min) {
-          weui.alert(`${that.tip2}${min}万份`, {
-            title: that.tip,
-            buttons: [{
-              label: that.confirm,
-              type: 'primary',
-              onClick: () => { console.log('ok') }
-            }]
-          })
+          showAlert(that.tip, `${that.tip2}${min}万份`, that.confirm)
           return false
         } else if (amt > max) {
-          weui.alert(that.tip3, {
-            title: that.tip,
-            buttons: [{
-              label: that.confirm,
-              type: 'primary',
-              onClick: () => { console.log('ok') }
-            }]
-          })
+          showAlert(that.tip, that.tip3, that.confirm)
           return false
         } else if (amt % step !== 0) {
-          weui.alert(`${that.tip4}${step}万份`, {
-            title: that.tip,
-            buttons: [{
-              label: that.confirm,
-              type: 'primary',
-              onClick: () => { console.log('ok') }
-            }]
-          })
+          showAlert(that.tip, `${that.tip4}${step}万份`, that.confirm)
           return false
         } else {
           return true
@@ -335,15 +297,13 @@
           },
           success: (res) => {
             if (!res.ret) {
-              weui.toast(res.msg, 500)
+              showToast(res.msg, 'warn')
               that.btnDisabled = false
-              that.btnLoading = false
               return false
             }
-            weui.toast(res.msg, 500)
+            showToast(res.msg, 'correct')
             setTimeout(() => {
               that.btnDisabled = false
-              that.btnLoading = false
               that.$router.push({
                 path: '/' + that.$i18n.locale
               })
@@ -351,9 +311,8 @@
           },
           error: (err) => {
             console.log(err)
-            weui.toast(that.netWork, 500)
+            showToast(this.netWork, 'error')
             that.btnDisabled = false
-            that.btnLoading = false
           }
         })
       }
@@ -458,26 +417,40 @@
   flex: 0 1 auto;
   font-size: 14px;
 }
-.input_con {
-  display:flex;
-  box-sizing:border-box;
-  height:40px;
-  flex:1;
-  align-items:center;
-}
-.input_con .unit {
-  flex:0 1 auto;
-  color:#ff5251;
-}
-.input_con input {
+.input_form{
   position:relative;
+  box-sizing:border-box;
+  line-height: 1.5;
+  display: flex;
+  align-items: center;
   width: 100%;
-  height:40px;
+}
+.input_form i{
+  font-size:18px;
+  position:absolute;
+  left:0;
+  top: 50%;
+  transform: translateY(-50%);
+  color: #ff5251;
+}
+.input_form .unit{
+  position: absolute;
+  right: 0;
+  top: 50%;
+  transform: translateY(-50%);
+  color: #ff5251;
+}
+.input_form input{
+  height:50px;
+  line-height:16px;
+  padding:17px 25px;
+  font-size: 16px;
   flex:1;
   border-radius: 0;
+  border-bottom:1px solid #BDBDBD;
   box-sizing: border-box;
+  background: #fff;
   outline: none;
-  border-bottom: 1px solid #ff5251;
 }
 .btn_area{
   margin-top: 15px;

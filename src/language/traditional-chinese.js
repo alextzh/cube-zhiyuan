@@ -168,7 +168,8 @@ export default {
     language: '切換語言',
     modifyPwd: '修改密碼',
     logOut: '退出',
-    tip1: '您確認要退出該賬戶嗎'
+    tip1: '您確認要退出該賬戶嗎',
+    tip2: '退出成功'
   },
 
   modifyPwd: {

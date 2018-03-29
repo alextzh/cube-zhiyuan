@@ -60,7 +60,7 @@
           </div>
         </div>
         <div class="btn_area">
-          <button type="submit" :disabled="btnDisabled" :class="{'weui-btn_disabled': btnDisabled}" class="weui-btn weui-btn_primary"><i :class="{'weui-loading': btnLoading}"></i>{{subscribeBtnTxt}}</button>
+          <cube-button type="submit" :disabled="btnDisabled">{{subscribeBtnTxt}}</cube-button>
         </div>
       </form>
     </div>
@@ -74,8 +74,7 @@
   import {_normalizeStr, getMd5, getBJDate} from 'common/js/tool'
   import Plan from 'common/js/plan'
   import * as API from 'common/js/http'
-  import 'weui'
-  import weui from 'weui.js'
+  import {showPicker, showToast, showAlert, showDialog} from 'common/js/cubeTool'
 
   export default {
     data() {
@@ -87,7 +86,6 @@
         currentPlan: null,
         currentProduct: null,
         subscribeAmt: '',
-        btnLoading: false,
         btnDisabled: false
       }
     },
@@ -127,6 +125,9 @@
       },
       cancel() {
         return this.$i18n.t('common.cancel')
+      },
+      pickerTitle() {
+        return this.$i18n.t('modifyPlan.selectPlan')
       }
     },
     created() {
@@ -166,35 +167,32 @@
               showArr.forEach((item, index) => {
                 item.settlement_time = _normalizeStr(item.settlement_time)
                 pickerArr.push(new Plan({
-                  label: item.name,
+                  text: item.name,
                   value: index
                 }))
               })
               this.pickerArr = pickerArr
               this.showArr = showArr
               this.currentPlan = showArr[0]
-              this.curValue = pickerArr[0].label
+              this.curValue = pickerArr[0].text
             }
           },
           error: (err) => {
             console.log(err)
-            weui.toast(this.netWork, 500)
+            showToast(this.netWork, 'error')
           }
         })
       },
       // 方案选择
       selectPlan() {
-        weui.picker(this.pickerArr, {
-          container: 'body',
-          defaultValue: [0],
-          onChange: (result) => {
-            console.log('change' + result)
-          },
-          onConfirm: (result) => {
-            this.currentPlan = this.showArr[result]
-            this.curValue = this.pickerArr[result].label
-          }
-        })
+        showPicker(this.pickerTitle, this.pickerArr, 0, this.cancel, this.confirm, this.selectPlanFn, this.cancelPlanFn)
+      },
+      selectPlanFn(selectedVal, selectedIndex, selectedText) {
+        this.currentPlan = this.showArr[selectedIndex]
+        this.curValue = selectedText[0]
+      },
+      cancelPlanFn() {
+        console.log('cancel')
       },
       // 提交追加
       formSubmit: function() {
@@ -202,68 +200,32 @@
         const param = this.subscribeAmt
         const planName = this.currentPlan.name
         if (this.checkSubscribe(that, param)) {
-          weui.confirm(`${this.tip5}${planName}${this.tip6}${param}万份?`, {
-            title: this.addTip,
-            buttons: [{
-              label: this.cancel,
-              type: 'default',
-              onClick: () => {
-                console.log('已取消')
-              }
-            }, {
-              label: this.confirm,
-              type: 'primary',
-              onClick: () => {
-                this.btnDisabled = true
-                this.btnLoading = true
-                this.mySubmit(that, param)
-              }
-            }]
-          })
+          showDialog(this.addTip, `${this.tip5}${planName}${this.tip6}${param}万份?`, this.confirm, this.cancel, this.confirmFn, this.cancelFn)
         }
+      },
+      confirmFn() {
+        var that = this
+        const param = this.subscribeAmt
+        this.btnDisabled = true
+        this.mySubmit(that, param)
+      },
+      cancelFn() {
+        console.log('cancel')
       },
       // 校验追加份额
       checkSubscribe: function(that, param) {
         var amt = param
         if (!amt) {
-          weui.alert(that.tip1, {
-            title: that.tip,
-            buttons: [{
-              label: that.confirm,
-              type: 'primary',
-              onClick: () => { console.log('ok') }
-            }]
-          })
+          showAlert(that.tip, that.tip1, that.confirm)
           return false
         } else if (amt < 1) {
-          weui.alert(that.tip2, {
-            title: that.tip,
-            buttons: [{
-              label: that.confirm,
-              type: 'primary',
-              onClick: () => { console.log('ok') }
-            }]
-          })
+          showAlert(that.tip, that.tip2, that.confirm)
           return false
         } else if (amt > 100000) {
-          weui.alert(that.tip3, {
-            title: that.tip,
-            buttons: [{
-              label: that.confirm,
-              type: 'primary',
-              onClick: () => { console.log('ok') }
-            }]
-          })
+          showAlert(that.tip, that.tip3, that.confirm)
           return false
         } else if (amt % 1 !== 0) {
-          weui.alert(that.tip4, {
-            title: that.tip,
-            buttons: [{
-              label: that.confirm,
-              type: 'primary',
-              onClick: () => { console.log('ok') }
-            }]
-          })
+          showAlert(that.tip, that.tip4, that.confirm)
           return false
         } else {
           return true
@@ -289,25 +251,22 @@
           },
           success: (res) => {
             if (!res.ret) {
-              weui.toast(res.msg, 500)
-              this.btnDisabled = false
-              this.btnLoading = false
+              showToast(res.msg, 'warn')
+              that.btnDisabled = false
               return false
             }
-            weui.toast(res.msg, 500)
+            showToast(res.msg, 'correct')
             setTimeout(() => {
-              this.btnDisabled = false
-              this.btnLoading = false
-              this.$router.push({
-                path: '/' + this.$i18n.locale
+              that.btnDisabled = false
+              that.$router.push({
+                path: '/' + that.$i18n.locale
               })
             }, 500)
           },
           error: (err) => {
             console.log(err)
-            weui.toast(this.netWork, 500)
-            this.btnDisabled = false
-            this.btnLoading = false
+            showToast(that.netWork, 'error')
+            that.btnDisabled = false
           }
         })
       }

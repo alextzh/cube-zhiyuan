@@ -3,12 +3,10 @@
     <div class="m-container">
       <navbar title="申购记录" :showClose="showClose" @back="back"></navbar>
       <div class="list">
-        <scroll ref="scroll" class="scroll_list"
-                v-if="purchaseList.length > 0"
-                :scrollbar="scrollbarObj"
-                :pullDownRefresh="pullDownRefreshObj"
-                :startY="parseInt(startY)"
-                @pullingDown="onPullingDown">
+        <cube-scroll  ref="scroll"
+                      v-if="purchaseList.length > 0"
+                      :options="options"
+                      @pulling-down="onPullingDown">
           <li class="item-box" v-for="(item, index) in purchaseList" :key="index">
             <div class="item">
               <div class="item_head">
@@ -40,7 +38,7 @@
               </div>
             </div>
           </li>
-        </scroll>
+        </cube-scroll>
         <div v-if="hasData">
           <div class="no_data">
             <i class="iconfont icon-nodata"></i>
@@ -53,13 +51,11 @@
 
 <script type="text/ecmascript-6">
   import $ from 'jquery'
-  import Scroll from 'base/c-scroll/c-scroll'
   import Navbar from 'base/navbar/navbar'
   import {getMd5, getBJDate} from 'common/js/tool'
   import * as API from 'common/js/http'
   import {getUserInfo} from 'common/js/storage'
-  import 'weui'
-  import weui from 'weui.js'
+  import {showToast, showDialog} from 'common/js/cubeTool'
 
   export default {
     data() {
@@ -70,28 +66,26 @@
         pageData: {
           customer_id: ''
         },
-        scrollbar: true,
-        scrollbarFade: true,
-        pullDownRefresh: true,
-        pullDownRefreshThreshold: 90,
-        pullDownRefreshStop: 60,
-        startY: 0,
+        options: {
+          pullDownRefresh: {
+            threshold: 90,
+            stop: 40,
+            txt: '刷新成功'
+          },
+          scrollbar: {
+            fade: true
+          }
+        },
         hasData: false
       }
     },
-    computed: {
-      scrollbarObj: function() {
-        return this.scrollbar ? {fade: this.scrollbarFade} : false
-      },
-      pullDownRefreshObj: function() {
-        return this.pullDownRefresh ? {
-          threshold: parseInt(this.pullDownRefreshThreshold),
-          stop: parseInt(this.pullDownRefreshStop)
-        } : false
-      }
-    },
     created() {
-      this.loading = weui.loading('加载中')
+      this.loading = this.$createToast({
+        time: 0,
+        txt: '加载中',
+        mask: true
+      })
+      this.loading.show()
       this.pageData.customer_id = getUserInfo().id
     },
     mounted() {
@@ -115,17 +109,12 @@
             'time_stamp': getBJDate().getTime()
           },
           success: (res) => {
+            this.loading.hide()
             if (!res.ret) {
-              weui.toast(res.msg, 500)
+              showToast(res.msg, 'warn')
               this.hasData = true
-              setTimeout(() => {
-                this.loading.hide()
-              }, 20)
               return false
             }
-            setTimeout(() => {
-              this.loading.hide()
-            }, 20)
             const list = res.obj
             this.purchaseList = list
             this.hasData = false
@@ -135,7 +124,8 @@
           },
           error: (err) => {
             console.log(err)
-            weui.toast('网络异常', 500)
+            this.loading.hide()
+            showToast('网络异常', 'error')
           }
         })
       },
@@ -145,56 +135,46 @@
       },
       // 申请赎回
       redeemAction(e) {
-        const id = e.id
-        weui.confirm('您确认要赎回当前产品吗', {
-          title: '提示',
-          buttons: [{
-            label: '取消',
-            type: 'default',
-            onClick: () => {
-              console.log('已取消')
+        this.id = e.id
+        showDialog('提示', `您确认要赎回当前产品吗`, '确定', '取消', this.confirmFn, this.cancelFn)
+      },
+      confirmFn() {
+        $.ajax({
+          type: 'POST',
+          url: API.api + '/api/v1/test/product/updateStatus',
+          data: {
+            sub_id: this.id,
+            status: '赎回待审核'
+          },
+          dataType: 'json',
+          headers: {
+            'content-type': 'application/x-www-form-urlencoded',
+            'secret_key': getMd5(),
+            'time_stamp': getBJDate().getTime()
+          },
+          success: (res) => {
+            if (!res.ret) {
+              showToast(res.msg, 'warn')
+              return false
             }
-          }, {
-            label: '确定',
-            type: 'primary',
-            onClick: () => {
-              $.ajax({
-                type: 'POST',
-                url: API.api + '/api/v1/test/product/updateStatus',
-                data: {
-                  sub_id: id,
-                  status: '赎回待审核'
-                },
-                dataType: 'json',
-                headers: {
-                  'content-type': 'application/x-www-form-urlencoded',
-                  'secret_key': getMd5(),
-                  'time_stamp': getBJDate().getTime()
-                },
-                success: (res) => {
-                  if (!res.ret) {
-                    weui.toast(res.msg, 500)
-                    return false
-                  }
-                  weui.toast(res.msg, 500)
-                  setTimeout(() => {
-                    this.$router.push({
-                      path: '/c-mine'
-                    })
-                  }, 500)
-                },
-                error: (err) => {
-                  console.log(err)
-                  weui.toast('网络异常', 500)
-                }
+            showToast(res.msg, 'correct')
+            setTimeout(() => {
+              this.$router.push({
+                path: '/c-mine'
               })
-            }
-          }]
+            }, 500)
+          },
+          error: (err) => {
+            console.log(err)
+            showToast('网络异常', 'error')
+          }
         })
+      },
+      cancelFn() {
+        console.log('cancel')
       }
     },
     components: {
-      Scroll,
       Navbar
     }
   }

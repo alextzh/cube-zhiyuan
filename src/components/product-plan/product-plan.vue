@@ -3,12 +3,10 @@
     <div class="m-container">
       <navbar :title="$t('navigator.plan')" :showClose="showClose" @back="back"></navbar>
       <div class="list">
-        <scroll ref="scroll" class="scroll_list"
-                v-if="productPlanList.length > 0"
-                :scrollbar="scrollbarObj"
-                :pullDownRefresh="pullDownRefreshObj"
-                :startY="parseInt(startY)"
-                @pullingDown="onPullingDown">
+        <cube-scroll  ref="scroll"
+                      v-if="productPlanList.length > 0"
+                      :options="options"
+                      @pulling-down="onPullingDown">
           <li class="item-box" v-for="(item, index) in productPlanList" :key="index">
             <div class="item">
               <div class="item_head">
@@ -48,22 +46,22 @@
               </div>
               <div class="item_action" v-if="item.isSqXgfaBtn && item.status === 'SHTG'">
                 <div style="flex: 1;">
-                  <button style='flex:1' class="redeemAllBtn" @click="modifyAction(item)">{{$t('plan.applyModify')}}</button>
+                  <cube-button @click="modifyAction(item)">{{$t('plan.applyModify')}}</cube-button>
                 </div>
               </div>
               <div class="item_action" v-if="item.isSqXgfaBtn === false && item.status === 'SHTG'">
                 <div style="flex: 1;">
-                  <button style='flex:1;background:rgba(0,0,0,.1)' class="redeemAllBtn" disabled="true">{{$t('plan.tip')}}</button>
+                  <cube-button disabled="true">{{$t('plan.tip')}}</cube-button>
                 </div>
               </div>
               <div class="item_action" v-if="item.qxSqXgfaBtn">
                 <div style="flex: 1;">
-                  <button style='flex:1' class="redeemAllBtn" @click="cancelAction(item)">{{$t('plan.cancelModify')}}</button>
+                  <cube-button @click="cancelAction(item)">{{$t('plan.cancelModify')}}</cube-button>
                 </div>
               </div>
             </div>
           </li>
-        </scroll>
+        </cube-scroll>
         <div v-if="hasData">
           <div class="no_data">
             <i class="iconfont icon-nodata"></i>
@@ -76,13 +74,11 @@
 
 <script type="text/ecmascript-6">
   import $ from 'jquery'
-  import Scroll from 'base/scroll/scroll'
   import Navbar from 'base/navbar/navbar'
   import {rendererZhMoneyWan, getMd5, getBJDate} from 'common/js/tool'
   import * as API from 'common/js/http'
   import {getUserInfo, setProduct} from 'common/js/storage'
-  import 'weui'
-  import weui from 'weui.js'
+  import {showToast, showDialog} from 'common/js/cubeTool'
 
   export default {
     data() {
@@ -91,26 +87,20 @@
         loading: null,
         productPlanList: [],
         customer_id: '',
-        scrollbar: true,
-        scrollbarFade: true,
-        pullDownRefresh: true,
-        pullDownRefreshThreshold: 90,
-        pullDownRefreshStop: 60,
-        startY: 0,
-        hasData: false,
-        totalPage: 0
+        options: {
+          pullDownRefresh: {
+            threshold: 90,
+            stop: 40,
+            txt: '刷新成功'
+          },
+          scrollbar: {
+            fade: true
+          }
+        },
+        hasData: false
       }
     },
     computed: {
-      scrollbarObj: function() {
-        return this.scrollbar ? {fade: this.scrollbarFade} : false
-      },
-      pullDownRefreshObj: function() {
-        return this.pullDownRefresh ? {
-          threshold: parseInt(this.pullDownRefreshThreshold),
-          stop: parseInt(this.pullDownRefreshStop)
-        } : false
-      },
       loadingTip() {
         return this.$i18n.t('common.loading')
       },
@@ -132,7 +122,12 @@
     },
     created() {
       this.$i18n.locale = this.$route.params.lang === 'zh' ? 'zh' : this.$route.params.lang === 'en' ? 'en' : 'tw'
-      this.loading = weui.loading(this.loadingTip)
+      this.loading = this.$createToast({
+        time: 0,
+        txt: this.loadingTip,
+        mask: true
+      })
+      this.loading.show()
       this.customer_id = getUserInfo().id
     },
     mounted() {
@@ -158,17 +153,12 @@
             'time_stamp': getBJDate().getTime()
           },
           success: (res) => {
+            this.loading.hide()
             if (!res.ret) {
-              weui.toast(res.msg, 500)
+              showToast(res.msg, 'warn')
               this.hasData = true
-              setTimeout(() => {
-                this.loading.hide()
-              }, 20)
               return false
             }
-            setTimeout(() => {
-              this.loading.hide()
-            }, 20)
             const list = res.obj
             this.productPlanList = this._normalizeList(list)
             this.hasData = false
@@ -178,7 +168,8 @@
           },
           error: (err) => {
             console.log(err)
-            weui.toast(this.netWork, 500)
+            this.loading.hide()
+            showToast(this.netWork, 'error')
           }
         })
       },
@@ -203,55 +194,45 @@
         })
       },
       cancelAction(e) {
-        var edit_item_id = e.edit_item_id
-        weui.confirm(this.tip1, {
-          title: this.cancelTip,
-          buttons: [{
-            label: this.cancel,
-            type: 'default',
-            onClick: () => {
-              console.log('已取消')
+        this.edit_item_id = e.edit_item_id
+        showDialog(this.cancelTip, this.tip1, this.confirm, this.cancel, this.confirmFn, this.cancelFn)
+      },
+      confirmFn() {
+        $.ajax({
+          type: 'POST',
+          url: API.api + '/api/v1/product/qxXgFA',
+          data: {
+            edit_item_id: this.edit_item_id
+          },
+          dataType: 'json',
+          headers: {
+            'content-type': 'application/x-www-form-urlencoded',
+            'secret_key': getMd5(),
+            'time_stamp': getBJDate().getTime()
+          },
+          success: (res) => {
+            if (!res.ret) {
+              showToast(res.msg, 'warn')
+              return false
             }
-          }, {
-            label: this.confirm,
-            type: 'primary',
-            onClick: () => {
-              $.ajax({
-                type: 'POST',
-                url: API.api + '/api/v1/product/qxXgFA',
-                data: {
-                  edit_item_id: edit_item_id
-                },
-                dataType: 'json',
-                headers: {
-                  'content-type': 'application/x-www-form-urlencoded',
-                  'secret_key': getMd5(),
-                  'time_stamp': getBJDate().getTime()
-                },
-                success: (res) => {
-                  if (!res.ret) {
-                    weui.toast(res.msg, 500)
-                    return false
-                  }
-                  weui.toast(res.msg, 500)
-                  setTimeout(() => {
-                    this.$router.push({
-                      path: '/' + this.$i18n.locale
-                    })
-                  }, 500)
-                },
-                error: (err) => {
-                  console.log(err)
-                  weui.toast(this.netWork, 500)
-                }
+            showToast(res.msg, 'correct')
+            setTimeout(() => {
+              this.$router.push({
+                path: '/' + this.$i18n.locale
               })
-            }
-          }]
+            }, 500)
+          },
+          error: (err) => {
+            console.log(err)
+            showToast(this.netWork, 'error')
+          }
         })
+      },
+      cancelFn() {
+        console.log('cancel')
       }
     },
     components: {
-      Scroll,
       Navbar
     }
   }

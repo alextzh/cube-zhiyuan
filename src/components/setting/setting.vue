@@ -24,7 +24,7 @@
           <span class="value" >{{currentLanguage}}</span>
         </div>
         <div class="btn_area">
-          <button class="btn" @click="loginOut()">{{$t('setting.logOut')}}</button>
+          <cube-button @click="loginOut()">{{$t('setting.logOut')}}</cube-button>
         </div>
       </div>
     </div>
@@ -34,14 +34,13 @@
 <script type="text/ecmascript-6">
   import Navbar from 'base/navbar/navbar'
   import {clearStorage} from 'common/js/storage'
-  import 'weui'
-  import weui from 'weui.js'
+  import {showDialog, showPicker, showToast} from 'common/js/cubeTool'
 
   export default {
     data() {
       return {
         showClose: false,
-        pickerArr: [{label: '简体中文', value: 0, type: 'zh'}, {label: 'English', value: 1, type: 'en'}, {label: '繁体中文', value: 2, type: 'tw'}],
+        pickerArr: [{text: '简体中文', value: 0, type: 'zh'}, {text: 'English', value: 1, type: 'en'}, {text: '繁体中文', value: 2, type: 'tw'}],
         currentLanguage: ''
       }
     },
@@ -52,11 +51,17 @@
       tip1() {
         return this.$i18n.t('setting.tip1')
       },
+      tip2() {
+        return this.$i18n.t('setting.tip2')
+      },
       confirm() {
         return this.$i18n.t('common.confirm')
       },
       cancel() {
         return this.$i18n.t('common.cancel')
+      },
+      switchLanguage() {
+        return this.$i18n.t('setting.language')
       }
     },
     created() {
@@ -76,25 +81,19 @@
         this.$router.back()
       },
       loginOut() {
-        weui.confirm(this.tip1, {
-          title: this.quitTip,
-          buttons: [{
-            label: this.cancel,
-            type: 'default',
-            onClick: () => {
-              console.log('已取消')
-            }
-          }, {
-            label: this.confirm,
-            type: 'primary',
-            onClick: () => {
-              clearStorage()
-              this.$router.push({
-                path: '/login/' + this.$i18n.locale
-              })
-            }
-          }]
-        })
+        showDialog(this.quitTip, this.tip1, this.confirm, this.cancel, this.confirmFn, this.cancelFn)
+      },
+      confirmFn() {
+        clearStorage()
+        showToast(this.tip2, 'correct')
+        setTimeout(() => {
+          this.$router.push({
+            path: '/login/' + this.$i18n.locale
+          })
+        }, 500)
+      },
+      cancelFn() {
+        console.log('cancel')
       },
       toTransfer() {
         this.$router.push({
@@ -112,17 +111,14 @@
         })
       },
       toSwitchLanguage() {
-        weui.picker(this.pickerArr, {
-          container: 'body',
-          defaultValue: [0],
-          onChange: (result) => {
-            console.log('change' + result)
-          },
-          onConfirm: (result) => {
-            this.currentLanguage = this.pickerArr[result].label
-            this.changeLanguage(this.pickerArr[result].type)
-          }
-        })
+        showPicker(this.switchLanguage, this.pickerArr, 0, this.cancel, this.confirm, this.selectPlanFn, this.cancelPlanFn)
+      },
+      cancelPlanFn() {
+        console.log('cancel')
+      },
+      selectPlanFn(selectedVal, selectedIndex, selectedText) {
+        this.currentLanguage = selectedText[0]
+        this.changeLanguage(this.pickerArr[selectedIndex].type)
       },
       changeLanguage(lang) {
         if (this.$route.params.lang !== lang) {

@@ -168,7 +168,8 @@ export default {
     language: 'Language',
     modifyPwd: 'Modify Password',
     logOut: 'Log Out',
-    tip1: 'Are you sure you want to leave this account?'
+    tip1: 'Are you sure you want to leave this account?',
+    tip2: 'Exit Success'
   },
 
   modifyPwd: {

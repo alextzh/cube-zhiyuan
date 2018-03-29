@@ -1,6 +1,6 @@
 export default class Plan {
-  constructor({label, value}) {
-    this.label = label
+  constructor({text, value}) {
+    this.text = text
     this.value = value
   }
 }

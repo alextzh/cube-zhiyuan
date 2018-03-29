@@ -47,7 +47,7 @@
           </div>
         </div>
         <div class="btn_area">
-          <button type="submit" :disabled="btnDisabled" :class="{'weui-btn_disabled': btnDisabled}" class="weui-btn weui-btn_primary"><i :class="{'weui-loading': btnLoading}"></i>{{redeemBtnTxt}}</button>
+          <cube-button type="submit" :disabled="btnDisabled">{{redeemBtnTxt}}</cube-button>
         </div>
       </form>
       <div class="redeem_rule">
@@ -68,8 +68,7 @@
   import {getUserInfo, getProduct} from 'common/js/storage'
   import {getMd5, getBJDate} from 'common/js/tool'
   import * as API from 'common/js/http'
-  import 'weui'
-  import weui from 'weui.js'
+  import {showToast, showAlert, showDialog} from 'common/js/cubeTool'
 
   export default {
     data() {
@@ -77,7 +76,6 @@
         showClose: false,
         currentProduct: null,
         redeemAmt: '',
-        btnLoading: false,
         btnDisabled: false
       }
     },
@@ -130,69 +128,32 @@
       formSubmit() {
         const param = this.redeemAmt
         if (this.checkRedeem(param)) {
-          weui.confirm(`${this.tip5}${param}万份?`, {
-            title: this.redeemTip,
-            buttons: [{
-              label: this.cancel,
-              type: 'default',
-              onClick: () => {
-                console.log('已取消')
-              }
-            }, {
-              label: this.confirm,
-              type: 'primary',
-              onClick: () => {
-                this.btnDisabled = true
-                this.btnLoading = true
-                this.mySubmit(param)
-              }
-            }]
-          })
+          showDialog(this.redeemTip, `${this.tip5}${param}万份?`, this.confirm, this.cancel, this.confirmFn, this.cancelFn)
         }
+      },
+      confirmFn() {
+        const param = this.redeemAmt
+        this.btnDisabled = true
+        this.mySubmit(param)
+      },
+      cancelFn() {
+        console.log('cancel')
       },
       // 校验赎回金额
       checkRedeem(param) {
         var amt = param
         var max = getProduct().subscribe_money
         if (!amt) {
-          weui.alert(this.tip1, {
-            title: this.tip,
-            buttons: [{
-              label: this.confirm,
-              type: 'primary',
-              onClick: () => { console.log('ok') }
-            }]
-          })
+          showAlert(this.tip, this.tip1, this.confirm)
           return false
         } else if (amt < 1) {
-          weui.alert(this.tip2, {
-            title: this.tip,
-            buttons: [{
-              label: this.confirm,
-              type: 'primary',
-              onClick: () => { console.log('ok') }
-            }]
-          })
+          showAlert(this.tip, this.tip2, this.confirm)
           return false
         } else if (amt > max) {
-          weui.alert(this.tip3, {
-            title: this.tip,
-            buttons: [{
-              label: this.confirm,
-              type: 'primary',
-              onClick: () => { console.log('ok') }
-            }]
-          })
+          showAlert(this.tip, this.tip3, this.confirm)
           return false
         } else if (amt % 1 !== 0) {
-          weui.alert(this.tip4, {
-            title: this.tip,
-            buttons: [{
-              label: this.confirm,
-              type: 'primary',
-              onClick: () => { console.log('ok') }
-            }]
-          })
+          showAlert(this.tip, this.tip4, this.confirm)
           return false
         } else {
           return true
@@ -218,15 +179,13 @@
           },
           success: (res) => {
             if (!res.ret) {
-              weui.toast(res.msg, 500)
+              showToast(res.msg, 'warn')
               this.btnDisabled = false
-              this.btnLoading = false
               return false
             }
-            weui.toast(res.msg, 500)
+            showToast(res.msg, 'correct')
             setTimeout(() => {
               this.btnDisabled = false
-              this.btnLoading = false
               this.$router.push({
                 path: '/' + this.$i18n.locale
               })
@@ -234,9 +193,8 @@
           },
           error: (err) => {
             console.log(err)
-            weui.toast(this.netWork, 500)
+            showToast(this.netWork, 'error')
             this.btnDisabled = false
-            this.btnLoading = false
           }
         })
       }

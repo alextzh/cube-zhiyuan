@@ -3,12 +3,10 @@
     <div class="m-container">
       <navbar title="赎回记录" :showClose="showClose" @back="back"></navbar>
       <div class="list">
-        <scroll ref="scroll" class="scroll_list"
-                v-if="redeemRecord.length > 0"
-                :scrollbar="scrollbarObj"
-                :pullDownRefresh="pullDownRefreshObj"
-                :startY="parseInt(startY)"
-                @pullingDown="onPullingDown">
+        <cube-scroll  ref="scroll"
+                      v-if="redeemRecord.length > 0"
+                      :options="options"
+                      @pulling-down="onPullingDown">
           <li class="item-box" v-for="(item, index) in redeemRecord" :key="index">
             <div class="item">
               <div class="item_head">
@@ -35,7 +33,7 @@
               </div>
             </div>
           </li>
-        </scroll>
+        </cube-scroll>
         <div v-if="hasData">
           <div class="no_data">
             <i class="iconfont icon-nodata"></i>
@@ -48,13 +46,11 @@
 
 <script type="text/ecmascript-6">
   import $ from 'jquery'
-  import Scroll from 'base/c-scroll/c-scroll'
   import Navbar from 'base/navbar/navbar'
   import {getMd5, getBJDate} from 'common/js/tool'
   import * as API from 'common/js/http'
   import {getUserInfo} from 'common/js/storage'
-  import 'weui'
-  import weui from 'weui.js'
+  import {showToast} from 'common/js/cubeTool'
 
   export default {
     data() {
@@ -65,28 +61,26 @@
         pageData: {
           customer_id: ''
         },
-        scrollbar: true,
-        scrollbarFade: true,
-        pullDownRefresh: true,
-        pullDownRefreshThreshold: 90,
-        pullDownRefreshStop: 60,
-        startY: 0,
+        options: {
+          pullDownRefresh: {
+            threshold: 90,
+            stop: 40,
+            txt: '刷新成功'
+          },
+          scrollbar: {
+            fade: true
+          }
+        },
         hasData: false
       }
     },
-    computed: {
-      scrollbarObj: function() {
-        return this.scrollbar ? {fade: this.scrollbarFade} : false
-      },
-      pullDownRefreshObj: function() {
-        return this.pullDownRefresh ? {
-          threshold: parseInt(this.pullDownRefreshThreshold),
-          stop: parseInt(this.pullDownRefreshStop)
-        } : false
-      }
-    },
     created() {
-      this.loading = weui.loading('加载中')
+      this.loading = this.$createToast({
+        time: 0,
+        txt: '加载中',
+        mask: true
+      })
+      this.loading.show()
       this.pageData.customer_id = getUserInfo().id
     },
     mounted() {
@@ -110,17 +104,12 @@
             'time_stamp': getBJDate().getTime()
           },
           success: (res) => {
+            this.loading.hide()
             if (!res.ret) {
-              weui.toast(res.msg, 500)
+              showToast(res.msg, 'warn')
               this.hasData = true
-              setTimeout(() => {
-                this.loading.hide()
-              }, 20)
               return false
             }
-            setTimeout(() => {
-              this.loading.hide()
-            }, 20)
             const list = res.obj
             this.redeemRecord = list
             this.hasData = false
@@ -130,7 +119,8 @@
           },
           error: (err) => {
             console.log(err)
-            weui.toast('网络异常', 500)
+            this.loading.hide()
+            showToast('网络异常', 'error')
           }
         })
       },
@@ -140,7 +130,6 @@
       }
     },
     components: {
-      Scroll,
       Navbar
     }
   }

@@ -12,60 +12,60 @@
             </div>
           </div>
         </div>
-        <div class="weui-grids">
-          <a href="javascript:;" class="weui-grid" @click="toNotice">
-            <div class="weui-grid__icon">
+        <div class="grids">
+          <a href="javascript:;" class="grid" @click="toNotice">
+            <div class="grid__icon">
               <img src="./notice.svg" alt="">
             </div>
-            <p class="weui-grid__label">{{$t('navigator.notice')}}</p>
+            <p class="grid__label">{{$t('navigator.notice')}}</p>
           </a>
-          <a href="javascript:;" class="weui-grid" @click="toPurchase">
-            <div class="weui-grid__icon">
+          <a href="javascript:;" class="grid" @click="toPurchase">
+            <div class="grid__icon">
               <img src="./shengou.svg" alt="">
             </div>
-            <p class="weui-grid__label">{{$t('navigator.purchase')}}</p>
+            <p class="grid__label">{{$t('navigator.purchase')}}</p>
           </a>
-          <a href="javascript:;" class="weui-grid" @click="toPurchaseRecord">
-            <div class="weui-grid__icon">
+          <a href="javascript:;" class="grid" @click="toPurchaseRecord">
+            <div class="grid__icon">
               <img src="./shengoujilu.svg" alt="">
             </div>
-            <p class="weui-grid__label">{{$t('navigator.purchaseRecord')}}</p>
+            <p class="grid__label">{{$t('navigator.purchaseRecord')}}</p>
           </a>
-          <a href="javascript:;" class="weui-grid" @click="toRedeemRecord">
-            <div class="weui-grid__icon">
+          <a href="javascript:;" class="grid" @click="toRedeemRecord">
+            <div class="grid__icon">
               <img src="./shuhuijilu.svg" alt="">
             </div>
-            <p class="weui-grid__label">{{$t('navigator.redeemRecord')}}</p>
+            <p class="grid__label">{{$t('navigator.redeemRecord')}}</p>
           </a>
-          <a href="javascript:;" class="weui-grid" @click="toProductPlan" v-if="isShowPlan">
-            <div class="weui-grid__icon">
+          <a href="javascript:;" class="grid" @click="toProductPlan" v-if="isShowPlan">
+            <div class="grid__icon">
               <img src="./fanganxiugai.svg" alt="">
             </div>
-            <p class="weui-grid__label">{{$t('navigator.plan')}}</p>
+            <p class="grid__label">{{$t('navigator.plan')}}</p>
           </a>
-          <a href="javascript:;" class="weui-grid" @click="toManagement">
-            <div class="weui-grid__icon">
+          <a href="javascript:;" class="grid" @click="toManagement">
+            <div class="grid__icon">
               <img src="./management.svg" alt="">
             </div>
-            <p class="weui-grid__label">{{$t('navigator.contract')}}</p>
+            <p class="grid__label">{{$t('navigator.contract')}}</p>
           </a>
-          <a href="javascript:;" class="weui-grid" @click="toQuestion">
-            <div class="weui-grid__icon">
+          <a href="javascript:;" class="grid" @click="toQuestion">
+            <div class="grid__icon">
               <img src="./question.svg" alt="">
             </div>
-            <p class="weui-grid__label">{{$t('navigator.question')}}</p>
+            <p class="grid__label">{{$t('navigator.question')}}</p>
           </a>
-          <a href="tel:400-000-6887" class="weui-grid">
-            <div class="weui-grid__icon">
+          <a href="tel:400-000-6887" class="grid">
+            <div class="grid__icon">
               <img src="./dianhua.svg" alt="">
             </div>
-            <p class="weui-grid__label">{{$t('navigator.contact')}}</p>
+            <p class="grid__label">{{$t('navigator.contact')}}</p>
           </a>
-          <a href="javascript:;" class="weui-grid" @click="toSetting">
-            <div class="weui-grid__icon">
+          <a href="javascript:;" class="grid" @click="toSetting">
+            <div class="grid__icon">
               <img src="./shezhi.svg" alt="">
             </div>
-            <p class="weui-grid__label">{{$t('navigator.setting')}}</p>
+            <p class="grid__label">{{$t('navigator.setting')}}</p>
           </a>
         </div>
       </div>
@@ -78,8 +78,7 @@ import $ from 'jquery'
 import * as API from 'common/js/http'
 import {getUserInfo} from 'common/js/storage'
 import {getMd5, getBJDate} from 'common/js/tool'
-import 'weui'
-import weui from 'weui.js'
+import {showToast} from 'common/js/cubeTool'
 
 export default {
   data() {
@@ -133,7 +132,7 @@ export default {
         },
         error: (err) => {
           console.log(err)
-          weui.toast(this.netWork, 500)
+          showToast(this.netWork, 'error')
         }
       })
     },
@@ -252,14 +251,89 @@ export default {
   color: #fff;
   font-size: 14px;
 }
-.weui-grids {
+.grids {
+  position: relative;
+  overflow: hidden;
   margin: 15px 0;
   background: #fff;
 }
-.weui-grid:before {
-  border-right: 0;
+.grids:before {
+  content: " ";
+  position: absolute;
+  left: 0;
+  top: 0;
+  right: 0;
+  height: 1px;
+  border-top: none;
+  color: #D9D9D9;
+  transform-origin: 0 0;
+  transform: scaleY(0.5);
 }
-.weui-grid:after {
-  border-bottom: 0;
+.grids:after {
+  content: " ";
+  position: absolute;
+  left: 0;
+  top: 0;
+  width: 1px;
+  bottom: 0;
+  border-left: none;
+  color: #D9D9D9;
+  transform-origin: 0 0;
+  transform: scaleX(0.5);
+}
+.grid{
+  position: relative;
+  float: left;
+  padding: 20px 10px;
+  width: 33.33333333%;
+  box-sizing: border-box;
+}
+.grid:before {
+  content: " ";
+  position: absolute;
+  right: 0;
+  top: 0;
+  width: 1px;
+  bottom: 0;
+  border-right: none;
+  color: #D9D9D9;
+  transform-origin: 100% 0;
+  transform: scaleX(0.5);
+}
+.grid:after {
+  content: " ";
+  position: absolute;
+  left: 0;
+  bottom: 0;
+  right: 0;
+  height: 1px;
+  border-bottom: none;
+  color: #D9D9D9;
+  -webkit-transform-origin: 0 100%;
+  transform-origin: 0 100%;
+  -webkit-transform: scaleY(0.5);
+  transform: scaleY(0.5);
+}
+.grid__icon {
+  width: 28px;
+  height: 28px;
+  margin: 0 auto;
+}
+.grid__icon img {
+  display: block;
+  width: 100%;
+  height: 100%;
+}
+.grid__label {
+  display: block;
+  text-align: center;
+  color: #000000;
+  font-size: 14px;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+  overflow: hidden;
+}
+.grid__icon + .grid__label {
+  margin-top: 5px;
 }
 </style>

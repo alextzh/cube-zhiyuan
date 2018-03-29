@@ -40,7 +40,7 @@
                 </div>
               </div>
               <div class="btn_area">
-                <button type="submit" :disabled="btnDisabled" :class="{'weui-btn_disabled': btnDisabled}" class="weui-btn weui-btn_primary"><i :class="{'weui-loading': btnLoading}"></i>{{purchaseBtnTxt}}</button>
+                <cube-button type="submit" :disabled="btnDisabled">{{purchaseBtnTxt}}</cube-button>
               </div>
             </div>
           </form>
@@ -56,8 +56,7 @@
   import {getMd5, getBJDate} from 'common/js/tool'
   import $ from 'jquery'
   import * as API from 'common/js/http'
-  import 'weui'
-  import weui from 'weui.js'
+  import {showToast, showDialog, showAlert} from 'common/js/cubeTool'
 
   export default {
     data() {
@@ -67,7 +66,6 @@
         customer_id: '',
         purchaseAmt: '',
         purchaseBtnTxt: '申购',
-        btnLoading: false,
         btnDisabled: false
       }
     },
@@ -84,59 +82,30 @@
         var that = this
         const param = this.purchaseAmt
         if (this.checkPurchase(that, param)) {
-          weui.confirm(`您确认要申购当前产品${param}个吗?`, {
-            title: '提示',
-            buttons: [{
-              label: '取消',
-              type: 'default',
-              onClick: () => {
-                console.log('已取消')
-              }
-            }, {
-              label: '确定',
-              type: 'primary',
-              onClick: () => {
-                this.purchaseBtnTxt = '申购中'
-                this.btnDisabled = true
-                this.btnLoading = true
-                this.mySubmit(that, param)
-              }
-            }]
-          })
+          showDialog('提示', `您确认要申购当前产品${param}个吗?`, '确定', '取消', this.confirmFn, this.cancelFn)
         }
+      },
+      confirmFn() {
+        var that = this
+        const param = this.purchaseAmt
+        this.purchaseBtnTxt = '申购中'
+        this.btnDisabled = true
+        this.mySubmit(that, param)
+      },
+      cancelFn() {
+        console.log('cancel')
       },
       // 校验申购个数
       checkPurchase: (that, param) => {
         var amt = param
         if (!amt) {
-          weui.alert('请输入申购数量', {
-            title: '提示',
-            buttons: [{
-              label: '确定',
-              type: 'primary',
-              onClick: () => { console.log('ok') }
-            }]
-          })
+          showAlert('提示', '请输入申购数量', '确定')
           return false
         } else if (amt < 1) {
-          weui.alert(`最小申购数量为1个`, {
-            title: '提示',
-            buttons: [{
-              label: '确定',
-              type: 'primary',
-              onClick: () => { console.log('ok') }
-            }]
-          })
+          showAlert('提示', '最小申购数量为1个', '确定')
           return false
         } else if (amt % 1 !== 0) {
-          weui.alert(`申购递增数量为1个`, {
-            title: '提示',
-            buttons: [{
-              label: '确定',
-              type: 'primary',
-              onClick: () => { console.log('ok') }
-            }]
-          })
+          showAlert('提示', '申购递增数量为1个', '确定')
           return false
         } else {
           return true
@@ -164,17 +133,15 @@
           },
           success: (res) => {
             if (!res.ret) {
-              weui.toast(res.msg, 500)
+              showToast(res.msg, 'warn')
               that.purchaseBtnTxt = '申购'
               that.btnDisabled = false
-              that.btnLoading = false
               return false
             }
-            weui.toast(res.msg, 500)
+            showToast(res.msg, 'correct')
             setTimeout(() => {
               that.purchaseBtnTxt = '申购'
               that.btnDisabled = false
-              that.btnLoading = false
               that.$router.push({
                 path: '/c-mine'
               })
@@ -182,10 +149,9 @@
           },
           error: (err) => {
             console.log(err)
-            weui.toast('网络异常', 500)
+            showToast('网络异常', 'error')
             that.purchaseBtnTxt = '申购'
             that.btnDisabled = false
-            that.btnLoading = false
           }
         })
       }

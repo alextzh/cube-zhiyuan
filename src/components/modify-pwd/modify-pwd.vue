@@ -19,7 +19,7 @@
             </div>
           </div>
           <div class="btn_area">
-            <button type="submit" :disabled="btnDisabled" :class="{'weui-btn_disabled': btnDisabled}" class="weui-btn weui-btn_primary"><i :class="{'weui-loading': btnLoading}"></i>{{modifyBtnTxt}}</button>
+            <cube-button type="submit" :disabled="btnDisabled">{{modifyBtnTxt}}</cube-button>
           </div>
         </form>
       </div>
@@ -33,8 +33,7 @@
   import * as API from 'common/js/http'
   import {getUserInfo} from 'common/js/storage'
   import {getMd5, getBJDate} from 'common/js/tool'
-  import 'weui'
-  import weui from 'weui.js'
+  import {showToast, showAlert, showDialog} from 'common/js/cubeTool'
 
   export default {
     data() {
@@ -43,7 +42,6 @@
         password: '',
         password1: '',
         password2: '',
-        btnLoading: false,
         btnDisabled: false
       }
     },
@@ -91,8 +89,6 @@
     created() {
       this.$i18n.locale = this.$route.params.lang === 'zh' ? 'zh' : this.$route.params.lang === 'en' ? 'en' : 'tw'
     },
-    mounted() {
-    },
     methods: {
       back() {
         this.$router.back()
@@ -112,47 +108,28 @@
         }
         var flag = this.checkPassword(param) && this.checkNewPassword(param)
         if (flag) {
-          weui.confirm(this.tip7, {
-            title: this.modifyTip,
-            buttons: [{
-              label: this.cancel,
-              type: 'default',
-              onClick: () => {
-                console.log('已取消')
-              }
-            }, {
-              label: this.confirm,
-              type: 'primary',
-              onClick: () => {
-                this.btnDisabled = true
-                this.btnLoading = true
-                this.mySubmit(param)
-              }
-            }]
-          })
+          showDialog(this.modifyTip, this.tip7, this.confirm, this.cancel, this.confirmFn, this.cancelFn)
         }
+      },
+      confirmFn() {
+        const param = {
+          password: this.password,
+          password1: this.password1,
+          password2: this.password2
+        }
+        this.btnDisabled = true
+        this.mySubmit(param)
+      },
+      cancelFn() {
+        console.log('cancel')
       },
       checkPassword(param) {
         var password = param.password.trim()
         if (!password) {
-          weui.alert(this.tip1, {
-            title: this.tip,
-            buttons: [{
-              label: this.confirm,
-              type: 'primary',
-              onClick: () => { console.log('ok') }
-            }]
-          })
+          showAlert(this.tip, this.tip1, this.confirm)
           return false
         } else if (password.length < 6 || password.length > 20) {
-          weui.alert(this.tip4, {
-            title: this.tip,
-            buttons: [{
-              label: this.confirm,
-              type: 'primary',
-              onClick: () => { console.log('ok') }
-            }]
-          })
+          showAlert(this.tip, this.tip4, this.confirm)
           return false
         } else {
           return true
@@ -162,44 +139,16 @@
         var password1 = param.password1.trim()
         var password2 = param.password2.trim()
         if (!password1 || !password2) {
-          weui.alert(this.tip2, {
-            title: this.tip,
-            buttons: [{
-              label: this.confirm,
-              type: 'primary',
-              onClick: () => { console.log('ok') }
-            }]
-          })
+          showAlert(this.tip, this.tip2, this.confirm)
           return false
         } else if (password1.length < 6 || password1.length > 20) {
-          weui.alert(this.tip5, {
-            title: this.tip,
-            buttons: [{
-              label: this.confirm,
-              type: 'primary',
-              onClick: () => { console.log('ok') }
-            }]
-          })
+          showAlert(this.tip, this.tip5, this.confirm)
           return false
         } else if (password2.length < 6 || password2.length > 20) {
-          weui.alert(this.tip5, {
-            title: this.tip,
-            buttons: [{
-              label: this.confirm,
-              type: 'primary',
-              onClick: () => { console.log('ok') }
-            }]
-          })
+          showAlert(this.tip, this.tip5, this.confirm)
           return false
         } else if (password1 !== password2) {
-          weui.alert(this.tip6, {
-            title: this.tip,
-            buttons: [{
-              label: this.confirm,
-              type: 'primary',
-              onClick: () => { console.log('ok') }
-            }]
-          })
+          showAlert(this.tip, this.tip6, this.confirm)
           return false
         } else {
           return true
@@ -223,15 +172,13 @@
           },
           success: (data) => {
             if (!data.ret) {
-              weui.toast(data.msg, 500)
+              showToast(data.msg, 'warn')
               this.btnDisabled = false
-              this.btnLoading = false
               return false
             }
-            weui.toast(data.msg, 500)
+            showToast(data.msg, 'correct')
             setTimeout(() => {
               this.btnDisabled = false
-              this.btnLoading = false
               this.$router.push({
                 path: '/' + this.$i18n.locale
               })
@@ -239,9 +186,8 @@
           },
           error: (err) => {
             console.log(err)
-            weui.toast(this.netWork, 500)
+            showToast(this.netWork, 'error')
             this.btnDisabled = false
-            this.btnLoading = false
           }
         })
       }
@@ -306,7 +252,8 @@
   }
 }
 .btn_area{
-  width:90%;
-  margin: 0 auto;
+  width: 100%;
+  padding: 0 15px;
+  box-sizing: border-box;
 }
 </style>

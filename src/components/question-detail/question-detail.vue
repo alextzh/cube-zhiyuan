@@ -74,5 +74,6 @@
     font-size: 14px;
     padding: 10px 0;
     white-space: pre-wrap;
+    line-height: 1.5;
   }
 </style>

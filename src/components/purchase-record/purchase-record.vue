@@ -3,12 +3,10 @@
     <div class="m-container">
       <navbar :title="$t('navigator.purchaseRecord')" :showClose="showClose" @back="back"></navbar>
       <div class="list">
-        <scroll ref="scroll" class="scroll_list"
-                v-if="purchaseList.length > 0"
-                :scrollbar="scrollbarObj"
-                :pullDownRefresh="pullDownRefreshObj"
-                :startY="parseInt(startY)"
-                @pullingDown="onPullingDown">
+        <cube-scroll  ref="scroll"
+                      v-if="purchaseList.length > 0"
+                      :options="options"
+                      @pulling-down="onPullingDown">
           <li class="item-box" v-for="(item, index) in purchaseList" :key="index">
             <div class="item">
               <div class="item_head">
@@ -62,41 +60,41 @@
               </div>
               <div class="item_action" v-if="item.isEdit || item.isDel">
                 <div style="flex: 1;margin-right: 10px;">
-                  <button style='flex:1' class="redeemAllBtn" @click="editAction(item)">{{$t('purchaseRecord.modifyPurchase')}}</button>
+                  <cube-button @click="editAction(item)">{{$t('purchaseRecord.modifyPurchase')}}</cube-button>
                 </div>
                 <div style="flex: 1;">
-                  <button class="redeemAllBtn" @click="cancelAction(item)">{{$t('purchaseRecord.cancelPurchase')}}</button>
+                  <cube-button @click="cancelAction(item)">{{$t('purchaseRecord.cancelPurchase')}}</cube-button>
                 </div>
               </div>
               <div class="item_action" v-if="item.isEditFtBtn || item.isQxFtBtn">
                 <div style="flex: 1;margin-right: 10px;">
-                  <button style='flex:1' class="redeemAllBtn" @click="editFt(item)">{{$t('purchaseRecord.modifyAdd')}}</button>
+                  <cube-button @click="editFt(item)">{{$t('purchaseRecord.modifyAdd')}}</cube-button>
                 </div>
                 <div style="flex: 1;">
-                  <button class="redeemAllBtn" @click="cancelFt(item)">{{$t('purchaseRecord.cancelAdd')}}</button>
+                  <cube-button @click="cancelFt(item)">{{$t('purchaseRecord.cancelAdd')}}</cube-button>
                 </div>
               </div>
               <div class="item_action" v-if="item.isRedeem && item.isRecast">
                 <div style="flex: 1;margin-right: 10px;">
-                  <button style='flex:1' class="redeemAllBtn" @click="redeemAction(item)">{{$t('purchaseRecord.applyRedeem')}}</button>
+                  <cube-button @click="redeemAction(item)">{{$t('purchaseRecord.applyRedeem')}}</cube-button>
                 </div>
                 <div style="flex: 1;">
-                  <button style='flex:1' class="redeemAllBtn" @click="addAction(item)">{{$t('purchaseRecord.applyAdd')}}</button>
+                  <cube-button @click="addAction(item)">{{$t('purchaseRecord.applyAdd')}}</cube-button>
                 </div>
               </div>
               <div class="item_action" v-if="item.isRedeem && !item.isRecast">
                 <div style="flex: 1;" v-if="item.isRedeem">
-                  <button style='flex:1' class="redeemAllBtn" @click="redeemAction(item)">{{$t('purchaseRecord.applyRedeem')}}</button>
+                  <cube-button @click="redeemAction(item)">{{$t('purchaseRecord.applyRedeem')}}</cube-button>
                 </div>
               </div>
               <div class="item_action" v-if="!item.isRedeem && item.isRecast">
                 <div style="flex: 1;">
-                  <button style='flex:1' class="redeemAllBtn" @click="addAction(item)">{{$t('purchaseRecord.applyAdd')}}</button>
+                  <cube-button @click="addAction(item)">{{$t('purchaseRecord.applyAdd')}}</cube-button>
                 </div>
               </div>
             </div>
           </li>
-        </scroll>
+        </cube-scroll>
         <div v-if="hasData">
           <div class="no_data">
             <i class="iconfont icon-nodata"></i>
@@ -109,13 +107,11 @@
 
 <script type="text/ecmascript-6">
   import $ from 'jquery'
-  import Scroll from 'base/scroll/scroll'
   import Navbar from 'base/navbar/navbar'
   import {rendererZhMoneyWan, _normalizeDate, getMd5, getBJDate} from 'common/js/tool'
   import * as API from 'common/js/http'
   import {getUserInfo, setProduct} from 'common/js/storage'
-  import 'weui'
-  import weui from 'weui.js'
+  import {showToast, showDialog} from 'common/js/cubeTool'
 
   export default {
     data() {
@@ -126,25 +122,20 @@
         pageData: {
           customer_id: ''
         },
-        scrollbar: true,
-        scrollbarFade: true,
-        pullDownRefresh: true,
-        pullDownRefreshThreshold: 90,
-        pullDownRefreshStop: 60,
-        startY: 0,
+        options: {
+          pullDownRefresh: {
+            threshold: 90,
+            stop: 40,
+            txt: '刷新成功'
+          },
+          scrollbar: {
+            fade: true
+          }
+        },
         hasData: false
       }
     },
     computed: {
-      scrollbarObj: function() {
-        return this.scrollbar ? {fade: this.scrollbarFade} : false
-      },
-      pullDownRefreshObj: function() {
-        return this.pullDownRefresh ? {
-          threshold: parseInt(this.pullDownRefreshThreshold),
-          stop: parseInt(this.pullDownRefreshStop)
-        } : false
-      },
       netWork() {
         return this.$i18n.t('common.network')
       },
@@ -169,7 +160,12 @@
     },
     created() {
       this.$i18n.locale = this.$route.params.lang === 'zh' ? 'zh' : this.$route.params.lang === 'en' ? 'en' : 'tw'
-      this.loading = weui.loading(this.loadingTip)
+      this.loading = this.$createToast({
+        time: 0,
+        txt: this.loadingTip,
+        mask: true
+      })
+      this.loading.show()
       this.pageData.customer_id = getUserInfo().id
     },
     mounted() {
@@ -193,17 +189,12 @@
             'time_stamp': getBJDate().getTime()
           },
           success: (res) => {
+            this.loading.hide()
             if (!res.ret) {
-              weui.toast(res.msg, 500)
+              showToast(res.msg, 'warn')
               this.hasData = true
-              setTimeout(() => {
-                this.loading.hide()
-              }, 20)
               return false
             }
-            setTimeout(() => {
-              this.loading.hide()
-            }, 20)
             const list = res.obj
             this.purchaseList = this._normalizeList(list)
             this.hasData = false
@@ -212,8 +203,9 @@
             }, 20)
           },
           error: (err) => {
+            this.loading.hide()
             console.log(err)
-            weui.toast(this.netWork, 500)
+            showToast(this.netWork, 'error')
           }
         })
       },
@@ -264,51 +256,42 @@
       },
       // 取消追加
       cancelFt(e) {
-        const account_id = e.account_id
-        weui.confirm(this.tip2, {
-          title: this.cancelTip,
-          buttons: [{
-            label: this.cancel,
-            type: 'default',
-            onClick: () => {
-              console.log('已取消')
+        this.account_id = e.account_id
+        showDialog(this.cancelTip, this.tip2, this.confirm, this.cancel, this.confirmFn, this.cancelFn)
+      },
+      confirmFn() {
+        $.ajax({
+          type: 'POST',
+          url: API.api + '/api/v1/subscribe/qxRecast',
+          data: {
+            account_id: this.account_id
+          },
+          dataType: 'json',
+          headers: {
+            'content-type': 'application/x-www-form-urlencoded',
+            'secret_key': getMd5(),
+            'time_stamp': getBJDate().getTime()
+          },
+          success: (res) => {
+            if (!res.ret) {
+              showToast(res.msg, 'warn')
+              return false
             }
-          }, {
-            label: this.confirm,
-            type: 'primary',
-            onClick: () => {
-              $.ajax({
-                type: 'POST',
-                url: API.api + '/api/v1/subscribe/qxRecast',
-                data: {
-                  account_id: account_id
-                },
-                dataType: 'json',
-                headers: {
-                  'content-type': 'application/x-www-form-urlencoded',
-                  'secret_key': getMd5(),
-                  'time_stamp': getBJDate().getTime()
-                },
-                success: (res) => {
-                  if (!res.ret) {
-                    weui.toast(res.msg, 500)
-                    return false
-                  }
-                  weui.toast(res.msg, 500)
-                  setTimeout(() => {
-                    this.$router.push({
-                      path: '/' + this.$i18n.locale
-                    })
-                  }, 500)
-                },
-                error: (err) => {
-                  console.log(err)
-                  weui.toast(this.netWork, 500)
-                }
+            showToast(res.msg, 'correct')
+            setTimeout(() => {
+              this.$router.push({
+                path: '/' + this.$i18n.locale
               })
-            }
-          }]
+            }, 500)
+          },
+          error: (err) => {
+            console.log(err)
+            showToast(this.netWork, 'error')
+          }
         })
+      },
+      cancelFn() {
+        console.log('cancel')
       },
       // 修改申购
       editAction(e) {
@@ -319,57 +302,44 @@
       },
       // 删除申购记录
       cancelAction(e) {
+        this.subscribe_id = e.subscribe_id
+        showDialog(this.cancelTip, this.tip1, this.confirm, this.cancel, this.confirmPurchaseFn, this.cancelFn)
+      },
+      confirmPurchaseFn() {
         const customer_id = getUserInfo().id
-        const subscribe_id = e.subscribe_id
-        weui.confirm(this.tip1, {
-          title: this.cancelTip,
-          buttons: [{
-            label: this.cancel,
-            type: 'default',
-            onClick: () => {
-              console.log('已取消')
+        $.ajax({
+          type: 'POST',
+          url: API.api + '/api/v1/subscribe/qxApply',
+          data: {
+            customer_id: customer_id,
+            subscribe_id: this.subscribe_id
+          },
+          dataType: 'json',
+          headers: {
+            'content-type': 'application/x-www-form-urlencoded',
+            'secret_key': getMd5(),
+            'time_stamp': getBJDate().getTime()
+          },
+          success: (res) => {
+            if (!res.ret) {
+              showToast(res.msg, 'warn')
+              return false
             }
-          }, {
-            label: this.confirm,
-            type: 'primary',
-            onClick: () => {
-              $.ajax({
-                type: 'POST',
-                url: API.api + '/api/v1/subscribe/qxApply',
-                data: {
-                  customer_id: customer_id,
-                  subscribe_id: subscribe_id
-                },
-                dataType: 'json',
-                headers: {
-                  'content-type': 'application/x-www-form-urlencoded',
-                  'secret_key': getMd5(),
-                  'time_stamp': getBJDate().getTime()
-                },
-                success: (res) => {
-                  if (!res.ret) {
-                    weui.toast(res.msg, 500)
-                    return false
-                  }
-                  weui.toast(res.msg, 500)
-                  setTimeout(() => {
-                    this.$router.push({
-                      path: '/' + this.$i18n.locale
-                    })
-                  }, 500)
-                },
-                error: (err) => {
-                  console.log(err)
-                  weui.toast(this.netWork, 500)
-                }
+            showToast(res.msg, 'correct')
+            setTimeout(() => {
+              this.$router.push({
+                path: '/' + this.$i18n.locale
               })
-            }
-          }]
+            }, 500)
+          },
+          error: (err) => {
+            console.log(err)
+            showToast(this.netWork, 'error')
+          }
         })
       }
     },
     components: {
-      Scroll,
       Navbar
     }
   }

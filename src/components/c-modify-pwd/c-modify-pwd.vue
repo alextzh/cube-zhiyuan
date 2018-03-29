@@ -19,7 +19,7 @@
             </div>
           </div>
           <div class="btn_area">
-            <button type="submit" :disabled="btnDisabled" :class="{'weui-btn_disabled': btnDisabled}" class="weui-btn weui-btn_primary"><i :class="{'weui-loading': btnLoading}"></i>{{modifyBtnTxt}}</button>
+            <cube-button type="submit" :disabled="btnDisabled">{{modifyBtnTxt}}</cube-button>
           </div>
         </form>
       </div>
@@ -33,8 +33,7 @@
   import * as API from 'common/js/http'
   import {getUserInfo} from 'common/js/storage'
   import {getMd5, getBJDate} from 'common/js/tool'
-  import 'weui'
-  import weui from 'weui.js'
+  import {showToast, showAlert, showDialog} from 'common/js/cubeTool'
 
   export default {
     data() {
@@ -44,7 +43,6 @@
         password1: '',
         password2: '',
         modifyBtnTxt: '修改',
-        btnLoading: false,
         btnDisabled: false
       }
     },
@@ -67,48 +65,29 @@
         }
         var flag = this.checkPassword(param) && this.checkNewPassword(param)
         if (flag) {
-          weui.confirm('您确认要修改密码吗', {
-            title: '修改提示',
-            buttons: [{
-              label: '取消',
-              type: 'default',
-              onClick: () => {
-                console.log('已取消')
-              }
-            }, {
-              label: '确定',
-              type: 'primary',
-              onClick: () => {
-                this.modifyBtnTxt = '修改中'
-                this.btnDisabled = true
-                this.btnLoading = true
-                this.mySubmit(param)
-              }
-            }]
-          })
+          showDialog('修改提示', `您确认要修改密码吗`, '确定', '取消', this.confirmFn, this.cancelFn)
         }
+      },
+      confirmFn() {
+        const param = {
+          password: this.password,
+          password1: this.password1,
+          password2: this.password2
+        }
+        this.modifyBtnTxt = '修改中'
+        this.btnDisabled = true
+        this.mySubmit(param)
+      },
+      cancelFn() {
+        console.log('cancel')
       },
       checkPassword(param) {
         var password = param.password.trim()
         if (!password) {
-          weui.alert('请输入原密码', {
-            title: '提示',
-            buttons: [{
-              label: '确定',
-              type: 'primary',
-              onClick: () => { console.log('ok') }
-            }]
-          })
+          showAlert('提示', '请输入原密码', '确定')
           return false
         } else if (password.length < 6 || password.length > 20) {
-          weui.alert('请输入6-20位原密码', {
-            title: '提示',
-            buttons: [{
-              label: '确定',
-              type: 'primary',
-              onClick: () => { console.log('ok') }
-            }]
-          })
+          showAlert('提示', '请输入6-20位原密码', '确定')
           return false
         } else {
           return true
@@ -118,44 +97,16 @@
         var password1 = param.password1.trim()
         var password2 = param.password2.trim()
         if (!password1 || !password2) {
-          weui.alert('请输入新密码', {
-            title: '提示',
-            buttons: [{
-              label: '确定',
-              type: 'primary',
-              onClick: () => { console.log('ok') }
-            }]
-          })
+          showAlert('提示', '请输入新密码', '确定')
           return false
         } else if (password1.length < 6 || password1.length > 20) {
-          weui.alert('请输入6-20位新密码', {
-            title: '提示',
-            buttons: [{
-              label: '确定',
-              type: 'primary',
-              onClick: () => { console.log('ok') }
-            }]
-          })
+          showAlert('提示', '请输入6-20位新密码', '确定')
           return false
         } else if (password2.length < 6 || password2.length > 20) {
-          weui.alert('请输入6-20位新密码', {
-            title: '提示',
-            buttons: [{
-              label: '确定',
-              type: 'primary',
-              onClick: () => { console.log('ok') }
-            }]
-          })
+          showAlert('提示', '请输入6-20位新密码', '确定')
           return false
         } else if (password1 !== password2) {
-          weui.alert('两次新密码输入不一致', {
-            title: '提示',
-            buttons: [{
-              label: '确定',
-              type: 'primary',
-              onClick: () => { console.log('ok') }
-            }]
-          })
+          showAlert('提示', '两次新密码输入不一致', '确定')
           return false
         } else {
           return true
@@ -179,17 +130,15 @@
           },
           success: (data) => {
             if (!data.ret) {
-              weui.toast(data.msg, 500)
+              showToast(data.msg, 'warn')
               this.modifyBtnTxt = '修改'
               this.btnDisabled = false
-              this.btnLoading = false
               return false
             }
-            weui.toast(data.msg, 500)
+            showToast(data.msg, 'correct')
             setTimeout(() => {
               this.modifyBtnTxt = '修改'
               this.btnDisabled = false
-              this.btnLoading = false
               this.$router.push({
                 path: '/c-mine'
               })
@@ -197,10 +146,9 @@
           },
           error: (err) => {
             console.log(err)
-            weui.toast('网络异常', 500)
+            showToast('网络异常', 'error')
             this.modifyBtnTxt = '修改'
             this.btnDisabled = false
-            this.btnLoading = false
           }
         })
       }

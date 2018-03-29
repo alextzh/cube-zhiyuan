@@ -10,11 +10,11 @@
         <div class="input_area">
           <div class="input_form">
             <i class="iconfont icon-phone"></i>
-            <input v-model="user.mobile" maxlength="11" type="number" :placeholder="phoneNumber" @focus="onFocus" @blur="onBlur" />
+            <input v-model="user.mobile" maxlength="11" type="number" :placeholder="phoneNumber" @focus="onFocus" />
           </div>
           <div class="input_form">
             <i class="iconfont icon-pwd"></i>
-            <input v-model="user.password" maxlength="20" type="password" :placeholder="userPwd" @focus="onFocus" @blur="onBlur" />
+            <input v-model="user.password" maxlength="20" type="password" :placeholder="userPwd" @focus="onFocus" />
           </div>
         </div>
         <div class="btn_area">
@@ -104,8 +104,6 @@
           pannel.scrollIntoView(true)
           pannel.scrollIntoViewIfNeeded()
         }, 100)
-      },
-      onBlur() {
       },
       sub() {
         const param = this.user

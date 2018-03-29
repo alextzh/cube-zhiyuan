@@ -3,14 +3,10 @@
     <div class="m-container">
       <navbar :title="$t('navigator.redeemRecord')" :showClose="showClose" @back="back"></navbar>
       <div class="list">
-        <scroll ref="scroll" class="scroll_list"
-                v-if="redeemRecord.length > 0"
-                :scrollbar="scrollbarObj"
-                :pullDownRefresh="pullDownRefreshObj"
-                :pullUpLoad="pullUpLoadObj"
-                :startY="parseInt(startY)"
-                @pullingDown="onPullingDown"
-                @pullingUp="onPullingUp">
+        <cube-scroll  ref="scroll"
+                      v-if="redeemRecord.length > 0"
+                      :options="options"
+                      @pulling-down="onPullingDown">
           <li class="item-box" v-for="(item, index) in redeemRecord" :key="index">
             <div class="item">
               <div class="item_head">
@@ -33,12 +29,12 @@
               </div>
               <div class="item_action" v-if="item.isQxshBtn">
                 <div style="flex: 1;">
-                  <button class="redeemAllBtn" @click="cancelAction(item)">{{$t('redeemRecord.cancelRedeem')}}</button>
+                  <cube-button @click="cancelAction(item)">{{$t('redeemRecord.cancelRedeem')}}</cube-button>
                 </div>
               </div>
             </div>
           </li>
-        </scroll>
+        </cube-scroll>
         <div v-if="hasData">
           <div class="no_data">
             <i class="iconfont icon-nodata"></i>
@@ -51,13 +47,11 @@
 
 <script type="text/ecmascript-6">
   import $ from 'jquery'
-  import Scroll from 'base/scroll/scroll'
   import Navbar from 'base/navbar/navbar'
   import {rendererZhMoneyWan, _normalizeDate, getMd5, getBJDate} from 'common/js/tool'
   import * as API from 'common/js/http'
   import {getUserInfo} from 'common/js/storage'
-  import 'weui'
-  import weui from 'weui.js'
+  import {showToast, showDialog} from 'common/js/cubeTool'
 
   export default {
     data() {
@@ -66,37 +60,22 @@
         loading: null,
         redeemRecord: [],
         pageData: {
-          page: 1,
-          rows: 10,
           customer_id: ''
         },
-        scrollbar: true,
-        scrollbarFade: true,
-        pullDownRefresh: true,
-        pullDownRefreshThreshold: 90,
-        pullDownRefreshStop: 60,
-        pullUpLoad: true,
-        pullUpLoadThreshold: 0,
-        startY: 0,
-        hasData: false,
-        totalPage: 0
+        options: {
+          pullDownRefresh: {
+            threshold: 90,
+            stop: 40,
+            txt: '刷新成功'
+          },
+          scrollbar: {
+            fade: true
+          }
+        },
+        hasData: false
       }
     },
     computed: {
-      scrollbarObj: function() {
-        return this.scrollbar ? {fade: this.scrollbarFade} : false
-      },
-      pullDownRefreshObj: function() {
-        return this.pullDownRefresh ? {
-          threshold: parseInt(this.pullDownRefreshThreshold),
-          stop: parseInt(this.pullDownRefreshStop)
-        } : false
-      },
-      pullUpLoadObj: function() {
-        return this.pullUpLoad ? {
-          threshold: parseInt(this.pullUpLoadThreshold)
-        } : false
-      },
       netWork() {
         return this.$i18n.t('common.network')
       },
@@ -118,7 +97,12 @@
     },
     created() {
       this.$i18n.locale = this.$route.params.lang === 'zh' ? 'zh' : this.$route.params.lang === 'en' ? 'en' : 'tw'
-      this.loading = weui.loading(this.loadingTip)
+      this.loading = this.$createToast({
+        time: 0,
+        txt: this.loadingTip,
+        mask: true
+      })
+      this.loading.show()
       this.pageData.customer_id = getUserInfo().id
     },
     mounted() {
@@ -131,7 +115,6 @@
         this.$router.back()
       },
       _getRedeemRecord() {
-        this.pageData.page = 1
         $.ajax({
           type: 'POST',
           url: API.api + '/api/v1/redeem/myRedeems',
@@ -143,19 +126,13 @@
             'time_stamp': getBJDate().getTime()
           },
           success: (res) => {
+            this.loading.hide()
             if (!res.ret) {
-              weui.toast(res.msg, 500)
+              showToast(res.msg, 'warn')
               this.hasData = true
-              setTimeout(() => {
-                this.loading.hide()
-              }, 20)
               return false
             }
-            setTimeout(() => {
-              this.loading.hide()
-            }, 20)
             const list = res.obj.list
-            this.totalPage = res.obj.totalPage
             this.redeemRecord = this._normalizeList(list)
             this.hasData = false
             setTimeout(() => {
@@ -164,54 +141,14 @@
           },
           error: (err) => {
             console.log(err)
-            weui.toast(this.netWork, 500)
+            this.loading.hide()
+            showToast(this.netWork, 'error')
           }
         })
-      },
-      _getMoreRedeemRecord() {
-        this.pageData.page = this.pageData.page + 1
-        if (this.pageData.page > this.totalPage) {
-          // 如果没有新数据
-          setTimeout(() => {
-            this.$refs.scroll.forceUpdate()
-          }, 20)
-        } else {
-          $.ajax({
-            type: 'POST',
-            url: API.api + '/api/v1/redeem/myRedeems',
-            data: this.pageData,
-            dataType: 'json',
-            headers: {
-              'content-type': 'application/x-www-form-urlencoded',
-              'secret_key': getMd5(),
-              'time_stamp': getBJDate().getTime()
-            },
-            success: (res) => {
-              if (!res.ret) {
-                weui.toast(res.msg, 500)
-                this.hasData = true
-                return false
-              }
-              const list = res.obj.list
-              this.redeemRecord = this.redeemRecord.concat(this._normalizeList(list))
-              setTimeout(() => {
-                this.$refs.scroll.forceUpdate()
-              }, 20)
-            },
-            error: (err) => {
-              console.log(err)
-              weui.toast(this.netWork, 500)
-            }
-          })
-        }
       },
       onPullingDown() {
         // 更新数据
         this._getRedeemRecord()
-      },
-      onPullingUp() {
-        // 加载更多数据
-        this._getMoreRedeemRecord()
       },
       _normalizeList(list) {
         if (list === []) {
@@ -225,55 +162,45 @@
         }
       },
       cancelAction(e) {
-        const redeem_id = e.id
-        weui.confirm(this.tip1, {
-          title: this.cancelTip,
-          buttons: [{
-            label: this.cancel,
-            type: 'default',
-            onClick: () => {
-              console.log('已取消')
+        this.redeem_id = e.id
+        showDialog(this.cancelTip, this.tip1, this.confirm, this.cancel, this.confirmFn, this.cancelFn)
+      },
+      confirmFn() {
+        $.ajax({
+          type: 'POST',
+          url: API.api + '/api/v1/redeem/qxApply',
+          data: {
+            redeem_id: this.redeem_id
+          },
+          dataType: 'json',
+          headers: {
+            'content-type': 'application/x-www-form-urlencoded',
+            'secret_key': getMd5(),
+            'time_stamp': getBJDate().getTime()
+          },
+          success: (res) => {
+            if (!res.ret) {
+              showToast(res.msg, 'warn')
+              return false
             }
-          }, {
-            label: this.confirm,
-            type: 'primary',
-            onClick: () => {
-              $.ajax({
-                type: 'POST',
-                url: API.api + '/api/v1/redeem/qxApply',
-                data: {
-                  redeem_id: redeem_id
-                },
-                dataType: 'json',
-                headers: {
-                  'content-type': 'application/x-www-form-urlencoded',
-                  'secret_key': getMd5(),
-                  'time_stamp': getBJDate().getTime()
-                },
-                success: (res) => {
-                  if (!res.ret) {
-                    weui.toast(res.msg, 500)
-                    return false
-                  }
-                  weui.toast(res.msg, 500)
-                  setTimeout(() => {
-                    this.$router.push({
-                      path: '/' + this.$i18n.locale
-                    })
-                  }, 500)
-                },
-                error: (err) => {
-                  console.log(err)
-                  weui.toast(this.netWork, 500)
-                }
+            showToast(res.msg, 'correct')
+            setTimeout(() => {
+              this.$router.push({
+                path: '/' + this.$i18n.locale
               })
-            }
-          }]
+            }, 500)
+          },
+          error: (err) => {
+            console.log(err)
+            showToast(this.netWork, 'error')
+          }
         })
+      },
+      cancelFn() {
+        console.log('cancel')
       }
     },
     components: {
-      Scroll,
       Navbar
     }
   }

@@ -10,15 +10,15 @@
         <div class="input_area">
           <div class="input_form">
             <i class="iconfont icon-phone"></i>
-            <input v-model="user.mobile" maxlength="11" type="number" placeholder="手机号" @focus="onFocus" @blur="onBlur" />
+            <input v-model="user.mobile" maxlength="11" type="number" placeholder="手机号" @focus="onFocus" />
           </div>
           <div class="input_form">
             <i class="iconfont icon-pwd"></i>
-            <input v-model="user.password" maxlength="20" type="password" placeholder="密码" @focus="onFocus" @blur="onBlur" />
+            <input v-model="user.password" maxlength="20" type="password" placeholder="密码" @focus="onFocus" />
           </div>
         </div>
         <div class="btn_area">
-          <button type="submit" :disabled="btnDisabled" :class="{'weui-btn_disabled': btnDisabled}" class="weui-btn weui-btn_primary"><i :class="{'weui-loading': btnLoading}"></i>{{loginBtnTxt}}</button>
+          <cube-button type="submit" :disabled="btnDisabled">{{loginBtnTxt}}</cube-button>
         </div>
       </form>
     </div>
@@ -30,8 +30,7 @@
   import * as API from 'common/js/http'
   import {setUserInfo, setPosition, getPosition} from 'common/js/storage'
   import {getMd5, getBJDate} from 'common/js/tool'
-  import 'weui'
-  import weui from 'weui.js'
+  import {showToast, showAlert} from 'common/js/cubeTool'
 
   export default{
     data() {
@@ -42,7 +41,6 @@
           password: ''
         },
         loginBtnTxt: '登录',
-        btnLoading: false,
         btnDisabled: false,
         lng: 0,
         lat: 0,
@@ -72,15 +70,12 @@
           pannel.scrollIntoViewIfNeeded()
         }, 100)
       },
-      onBlur() {
-      },
       sub() {
         const param = this.user
         const flag = this.checkMobile(param) && this.checkPwd(param)
         if (flag) {
           this.loginBtnTxt = '登录中'
           this.btnDisabled = true
-          this.btnLoading = true
           this.mySubmit(param)
         }
       },
@@ -89,38 +84,17 @@
         if (mobile.length === 11) {
           return true
         } else {
-          weui.alert('请输入有效的手机号码', {
-            title: '提示',
-            buttons: [{
-              label: '确定',
-              type: 'primary',
-              onClick: () => { console.log('ok') }
-            }]
-          })
+          showAlert('提示', '请输入有效的手机号码', '确定')
           return false
         }
       },
       checkPwd(param) {
         const pwd = param.password.trim()
         if (pwd.length <= 0) {
-          weui.alert('请输入密码', {
-            title: '提示',
-            buttons: [{
-              label: '确定',
-              type: 'primary',
-              onClick: () => { console.log('ok') }
-            }]
-          })
+          showAlert('提示', '请输入密码', '确定')
           return false
         } else if (pwd.length < 6 || pwd.length > 20) {
-          weui.alert('请输入6-20位密码', {
-            title: '提示',
-            buttons: [{
-              label: '确定',
-              type: 'primary',
-              onClick: () => { console.log('ok') }
-            }]
-          })
+          showAlert('提示', '请输入6-20位密码', '确定')
           return false
         } else {
           return true
@@ -144,10 +118,9 @@
           },
           success: (data) => {
             if (!data.ret) {
-              weui.toast(data.msg, 500)
+              showToast(data.msg, 'warn')
               this.loginBtnTxt = '登录'
               this.btnDisabled = false
-              this.btnLoading = false
               return false
             }
             const customer_id = data.obj.id
@@ -177,11 +150,10 @@
               }
             })
             setUserInfo(data.obj)
-            weui.toast(data.msg, 500)
+            showToast(data.msg, 'correct')
             setTimeout(() => {
               this.loginBtnTxt = '登录'
               this.btnDisabled = false
-              this.btnLoading = false
               this.$router.push({
                 path: '/c-mine'
               })
@@ -189,10 +161,9 @@
           },
           error: (err) => {
             console.log(err)
-            weui.toast('网络异常', 500)
+            showToast('网络异常', 'error')
             this.loginBtnTxt = '登录'
             this.btnDisabled = false
-            this.btnLoading = false
           }
         })
       }

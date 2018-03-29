@@ -7,6 +7,7 @@ import {
   /* eslint-disable no-unused-vars */
   Style,
   Button,
+  Textarea,
   Loading,
   Toast,
   Picker,
@@ -21,6 +22,7 @@ import i18n from './language'
 import 'common/css/index.css'
 
 Vue.use(Button)
+Vue.use(Textarea)
 Vue.use(Loading)
 Vue.use(Toast)
 Vue.use(Picker)

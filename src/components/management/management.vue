@@ -3,12 +3,10 @@
     <div class="m-container">
       <navbar :title="$t('navigator.contract')" :showClose="showClose" @back="back"></navbar>
       <div class="list">
-        <scroll ref="scroll" class="scroll_list"
-                v-if="contractList.length > 0"
-                :scrollbar="scrollbarObj"
-                :pullDownRefresh="pullDownRefreshObj"
-                :startY="parseInt(startY)"
-                @pullingDown="onPullingDown">
+        <cube-scroll  ref="scroll"
+                      v-if="contractList.length > 0"
+                      :options="options"
+                      @pulling-down="onPullingDown">
           <li class="item-box" v-for="(item, index) in contractList" :key="index">
             <div class="item">
               <div class="item_head">
@@ -28,23 +26,23 @@
               </div>
               <div class="item_action" v-if="item.sign_url && item.status === 'DQ'">
                 <div style="flex: 1;">
-                  <a class="btn" href="javascript:;" @click="toSign(item.sign_url)">{{$t('management.signContract')}}</a>
+                  <cube-button @click="toSign(item.sign_url)">{{$t('management.signContract')}}</cube-button>
                 </div>
               </div>
               <div class="item_action" v-else>
                 <div style="flex: 1;margin-right:10px;" v-if="device === 'Android' || device === 'WindowsPhone'">
-                  <a class="btn" :href="item.download_url">{{$t('management.download')}}</a>
+                  <a class="cube-btn" :href="item.download_url">{{$t('management.download')}}</a>
                 </div>
                 <div style="flex: 1;margin-right:10px;" v-if="device === 'iPhone'">
-                  <a class="btn" href="javascript:;" @click="toDownload">{{$t('management.download')}}</a>
+                  <cube-button @click="toDownload">{{$t('management.download')}}</cube-button>
                 </div>
                 <div style="flex: 1;">
-                  <a class="btn" href="javascript:;" @click="toView(item.viewpdf_url)">{{$t('management.view')}}</a>
+                  <cube-button @click="toView(item.viewpdf_url)">{{$t('management.view')}}</cube-button>
                 </div>
               </div>
             </div>
           </li>
-        </scroll>
+        </cube-scroll>
         <div v-if="hasData">
           <div class="no_data">
             <i class="iconfont icon-nodata"></i>
@@ -57,13 +55,11 @@
 
 <script type="text/ecmascript-6">
   import $ from 'jquery'
-  import Scroll from 'base/scroll/scroll'
   import Navbar from 'base/navbar/navbar'
   import * as API from 'common/js/http'
   import {getUserInfo} from 'common/js/storage'
   import {getMd5, getBJDate} from 'common/js/tool'
-  import 'weui'
-  import weui from 'weui.js'
+  import {showToast, showAlert} from 'common/js/cubeTool'
   import { mapMutations } from 'vuex'
 
   const u = navigator.userAgent
@@ -76,26 +72,21 @@
         loading: null,
         contractList: [],
         customer_id: '',
-        scrollbar: true,
-        scrollbarFade: true,
-        pullDownRefresh: true,
-        pullDownRefreshThreshold: 90,
-        pullDownRefreshStop: 60,
-        startY: 0,
+        options: {
+          pullDownRefresh: {
+            threshold: 90,
+            stop: 40,
+            txt: '刷新成功'
+          },
+          scrollbar: {
+            fade: true
+          }
+        },
         hasData: false,
         device: ''
       }
     },
     computed: {
-      scrollbarObj: function() {
-        return this.scrollbar ? {fade: this.scrollbarFade} : false
-      },
-      pullDownRefreshObj: function() {
-        return this.pullDownRefresh ? {
-          threshold: parseInt(this.pullDownRefreshThreshold),
-          stop: parseInt(this.pullDownRefreshStop)
-        } : false
-      },
       loadingTip() {
         return this.$i18n.t('common.loading')
       },
@@ -117,7 +108,12 @@
     },
     created() {
       this.$i18n.locale = this.$route.params.lang === 'zh' ? 'zh' : this.$route.params.lang === 'en' ? 'en' : 'tw'
-      this.loading = weui.loading(this.loadingTip)
+      this.loading = this.$createToast({
+        time: 0,
+        txt: this.loadingTip,
+        mask: true
+      })
+      this.loading.show()
       this.customer_id = getUserInfo().id
       if (u.indexOf('Android') > -1 || u.indexOf('Linux') > -1) { // 安卓手机
         this.device = 'Android'
@@ -150,17 +146,12 @@
             'time_stamp': getBJDate().getTime()
           },
           success: (res) => {
+            this.loading.hide()
             if (!res.ret) {
-              weui.toast(res.msg, 500)
+              showToast(res.msg, 'warn')
               this.hasData = true
-              setTimeout(() => {
-                this.loading.hide()
-              }, 20)
               return false
             }
-            setTimeout(() => {
-              this.loading.hide()
-            }, 20)
             const list = res.rows
             this.contractList = list
             this.hasData = false
@@ -170,7 +161,8 @@
           },
           error: (err) => {
             console.log(err)
-            weui.toast(this.netWork, 500)
+            this.loading.hide()
+            showToast(this.netWork, 'error')
           }
         })
       },
@@ -191,16 +183,7 @@
         })
       },
       toDownload() {
-        weui.alert(`${this.tip} ${website} ${this.download}`, {
-          title: this.downloadTip,
-          buttons: [{
-            label: this.confirm,
-            type: 'primary',
-            onClick: () => {
-              console.log('ok')
-            }
-          }]
-        })
+        showAlert(this.downloadTip, `${this.tip} ${website} ${this.download}`, this.confirm)
       },
       ...mapMutations({
         setViewUrl: 'SET_VIEW_URL',
@@ -208,7 +191,6 @@
       })
     },
     components: {
-      Scroll,
       Navbar
     }
   }
@@ -295,16 +277,6 @@
     padding-top:10px;
     border-top:1px dashed #BDBDBD;
     display: flex;
-  }
-  .item_action .btn{
-    display: block;
-    height: 40px;
-    line-height: 40px;
-    text-align: center;
-    background: #ff5251;
-    color: #fff;
-    border-radius: 4px;
-    box-sizing: border-box;
   }
   span {
     font-size: 14px;

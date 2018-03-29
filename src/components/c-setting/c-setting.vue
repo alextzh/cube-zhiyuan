@@ -9,7 +9,7 @@
           <i class="iconfont icon-goto fc999"></i>
         </div>
         <div class="btn_area">
-          <button class="btn" @click="loginOut()">退出账号</button>
+          <cube-button @click="loginOut()">退出账号</cube-button>
         </div>
       </div>
     </div>
@@ -19,8 +19,7 @@
 <script type="text/ecmascript-6">
   import Navbar from 'base/navbar/navbar'
   import {clearStorage} from 'common/js/storage'
-  import 'weui'
-  import weui from 'weui.js'
+  import {showToast, showDialog} from 'common/js/cubeTool'
 
   export default {
     data() {
@@ -28,30 +27,29 @@
         showClose: false
       }
     },
+    computed: {
+      tip2() {
+        return this.$i18n.t('setting.tip2')
+      }
+    },
     methods: {
       back() {
         this.$router.back()
       },
       loginOut() {
-        weui.confirm('确定要退出账号吗', {
-          title: '退出提示',
-          buttons: [{
-            label: '取消',
-            type: 'default',
-            onClick: () => {
-              console.log('已取消')
-            }
-          }, {
-            label: '确定',
-            type: 'primary',
-            onClick: () => {
-              clearStorage()
-              this.$router.push({
-                path: '/c-login'
-              })
-            }
-          }]
-        })
+        showDialog('退出提示', `确定要退出账号吗`, '确定', '取消', this.confirmFn, this.cancelFn)
+      },
+      confirmFn() {
+        clearStorage()
+        showToast(this.tip2, 'correct')
+        setTimeout(() => {
+          this.$router.push({
+            path: '/c-login'
+          })
+        }, 500)
+      },
+      cancelFn() {
+        console.log('cancel')
       },
       toModifyPwd() {
         this.$router.push({

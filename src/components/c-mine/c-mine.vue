@@ -12,36 +12,36 @@
             </div>
           </div>
         </div>
-        <div class="weui-grids">
-          <a href="javascript:;" class="weui-grid" @click="toPurchase">
-            <div class="weui-grid__icon">
+        <div class="grids">
+          <a href="javascript:;" class="grid" @click="toPurchase">
+            <div class="grid__icon">
               <img src="./shengou.svg" alt="">
             </div>
-            <p class="weui-grid__label">立即申购</p>
+            <p class="grid__label">立即申购</p>
           </a>
-          <a href="javascript:;" class="weui-grid" @click="toPurchaseRecord">
-            <div class="weui-grid__icon">
+          <a href="javascript:;" class="grid" @click="toPurchaseRecord">
+            <div class="grid__icon">
               <img src="./shengoujilu.svg" alt="">
             </div>
-            <p class="weui-grid__label">申购记录</p>
+            <p class="grid__label">申购记录</p>
           </a>
-          <a href="javascript:;" class="weui-grid" @click="toRedeemRecord">
-            <div class="weui-grid__icon">
+          <a href="javascript:;" class="grid" @click="toRedeemRecord">
+            <div class="grid__icon">
               <img src="./shuhuijilu.svg" alt="">
             </div>
-            <p class="weui-grid__label">赎回记录</p>
+            <p class="grid__label">赎回记录</p>
           </a>
-          <a href="tel:400-000-6887" class="weui-grid">
-            <div class="weui-grid__icon">
+          <a href="tel:400-000-6887" class="grid">
+            <div class="grid__icon">
               <img src="./dianhua.svg" alt="">
             </div>
-            <p class="weui-grid__label">联系我们</p>
+            <p class="grid__label">联系我们</p>
           </a>
-          <a href="javascript:;" class="weui-grid" @click="toSetting">
-            <div class="weui-grid__icon">
+          <a href="javascript:;" class="grid" @click="toSetting">
+            <div class="grid__icon">
               <img src="./shezhi.svg" alt="">
             </div>
-            <p class="weui-grid__label">我的设置</p>
+            <p class="grid__label">我的设置</p>
           </a>
         </div>
       </div>
@@ -157,14 +157,89 @@
     color: #fff;
     font-size: 14px;
   }
-  .weui-grids {
-    margin: 15px 0;
-    background: #fff;
-  }
-  .weui-grid:before {
-    border-right: 0;
-  }
-  .weui-grid:after {
-    border-bottom: 0;
-  }
+  .grids {
+  position: relative;
+  overflow: hidden;
+  margin: 15px 0;
+  background: #fff;
+}
+.grids:before {
+  content: " ";
+  position: absolute;
+  left: 0;
+  top: 0;
+  right: 0;
+  height: 1px;
+  border-top: none;
+  color: #D9D9D9;
+  transform-origin: 0 0;
+  transform: scaleY(0.5);
+}
+.grids:after {
+  content: " ";
+  position: absolute;
+  left: 0;
+  top: 0;
+  width: 1px;
+  bottom: 0;
+  border-left: none;
+  color: #D9D9D9;
+  transform-origin: 0 0;
+  transform: scaleX(0.5);
+}
+.grid{
+  position: relative;
+  float: left;
+  padding: 20px 10px;
+  width: 33.33333333%;
+  box-sizing: border-box;
+}
+.grid:before {
+  content: " ";
+  position: absolute;
+  right: 0;
+  top: 0;
+  width: 1px;
+  bottom: 0;
+  border-right: none;
+  color: #D9D9D9;
+  transform-origin: 100% 0;
+  transform: scaleX(0.5);
+}
+.grid:after {
+  content: " ";
+  position: absolute;
+  left: 0;
+  bottom: 0;
+  right: 0;
+  height: 1px;
+  border-bottom: none;
+  color: #D9D9D9;
+  -webkit-transform-origin: 0 100%;
+  transform-origin: 0 100%;
+  -webkit-transform: scaleY(0.5);
+  transform: scaleY(0.5);
+}
+.grid__icon {
+  width: 28px;
+  height: 28px;
+  margin: 0 auto;
+}
+.grid__icon img {
+  display: block;
+  width: 100%;
+  height: 100%;
+}
+.grid__label {
+  display: block;
+  text-align: center;
+  color: #000000;
+  font-size: 14px;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+  overflow: hidden;
+}
+.grid__icon + .grid__label {
+  margin-top: 5px;
+}
 </style>
