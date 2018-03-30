@@ -11,13 +11,6 @@
 
 <script type="text/ecmascript-6">
   export default {
-    data() {
-      return {
-      }
-    },
-    created() {
-      this.$i18n.locale = this.$route.params.lang === 'zh' ? 'zh' : this.$route.params.lang === 'en' ? 'en' : 'tw'
-    }
   }
 </script>
 
@@ -37,5 +30,9 @@
   align-items: center;
   width: 100%;
   height: 100%;
+}
+.weixin p {
+  line-height: 1.5;
+  font-size: 24px;
 }
 </style>

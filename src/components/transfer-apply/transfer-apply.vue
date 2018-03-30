@@ -54,11 +54,15 @@
                 <span class="type_title">{{$t('purchase.transferChannel')}}：</span>
                 <input type="text" palceholder="请选择划款渠道" @click="selectChannel" readonly :value="currentChannel.text" />
               </div>
-              <div class="input_area" style="height:auto;">
+              <div class="input_area" style="height:auto;flex-direction: column;align-items: flex-start;">
                 <div class="input_form">
                   <i class="iconfont icon-redeemed"></i>
                   <span class='unit'>份</span>
                   <input type="number" v-model="purchaseAmt" :placeholder="$t('purchase.tip9')" />
+                </div>
+                <div class="redeem_tip">
+                  <i class="iconfont icon-risk"></i>
+                  <span>{{$t('purchase.tip18')}}</span>
                 </div>
               </div>
               <div class="input_area" style="height:auto;margin-top:10px;">
@@ -137,6 +141,9 @@
       },
       tip6() {
         return this.$i18n.t('purchase.tip13')
+      },
+      tip7() {
+        return this.$i18n.t('purchase.tip17')
       },
       netWork() {
         return this.$i18n.t('common.network')
@@ -237,14 +244,14 @@
       },
       // 方案选择
       selectPlan() {
-        showPicker(this.pickerTitle, this.pickerArr, 0, this.cancel, this.confirm, this.selectPlanlFn, this.cancelPlanFn)
-      },
-      cancelPlanFn() {
-        console.log('cancel')
+        showPicker(this.pickerTitle, this.pickerArr, 0, this.cancel, this.confirm, this.selectPlanFn, this.cancelPlanFn)
       },
       selectPlanFn(selectedVal, selectedIndex, selectedText) {
         this.currentPlan = this.showArr[selectedIndex]
         this.curValue = selectedText[0]
+      },
+      cancelPlanFn() {
+        console.log('cancel')
       },
       // 表单提交
       formSubmit() {
@@ -268,6 +275,9 @@
         var amt = param
         if (!amt) {
           showAlert(that.tip, that.tip1, that.confirm)
+          return false
+        } else if (amt < 10000) {
+          showAlert(that.tip, that.tip7, that.confirm)
           return false
         } else if (amt > 1000000000) {
           showAlert(that.tip, that.tip2, that.confirm)
@@ -463,6 +473,19 @@
   box-sizing: border-box;
   outline: none;
   border-bottom: 1px solid #ff5251;
+}
+.redeem_tip {
+  line-height: 15px;
+  padding-top: 5px;
+}
+.redeem_tip i{
+  font-size: 12px;
+  color: #ff5251;
+  padding: 0 5px;
+}
+.redeem_tip span{
+  font-size: 12px;
+  color: #ff5251;
 }
 .btn_area{
   margin-top: 15px;

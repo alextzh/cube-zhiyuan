@@ -8,7 +8,7 @@ import {
   Style,
   Button,
   Textarea,
-  Loading,
+  Switch,
   Toast,
   Picker,
   Dialog,
@@ -18,12 +18,13 @@ import {
 import fastclick from 'fastclick'
 import AMap from 'vue-amap'
 import i18n from './language'
+import 'common/js/browser.js'
 
 import 'common/css/index.css'
 
 Vue.use(Button)
 Vue.use(Textarea)
-Vue.use(Loading)
+Vue.use(Switch)
 Vue.use(Toast)
 Vue.use(Picker)
 Vue.use(Dialog)

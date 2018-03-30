@@ -34,6 +34,9 @@
   import {getUserInfo} from 'common/js/storage'
   import {getMd5, getBJDate} from 'common/js/tool'
   import {showToast, showAlert, showDialog} from 'common/js/cubeTool'
+  import {Base64} from 'common/js/base64'
+
+  const base64 = new Base64()
 
   export default {
     data() {
@@ -179,6 +182,7 @@
             showToast(data.msg, 'correct')
             setTimeout(() => {
               this.btnDisabled = false
+              window.localStorage.setItem('__pwd__', base64.encode(param.password1.trim()))
               this.$router.push({
                 path: '/' + this.$i18n.locale
               })
