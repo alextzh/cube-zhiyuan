@@ -58,6 +58,10 @@
             <span class='unit'>万份</span>
             <input type="number" v-model="subscribeAmt" maxlength="20" :placeholder="$t('addApply.tip1')" />
           </div>
+          <div class="redeem_tip">
+            <i class="iconfont icon-risk"></i>
+            <span>{{$t('addApply.tip8')}}</span>
+          </div>
         </div>
         <div class="btn_area">
           <cube-button type="submit" :disabled="btnDisabled">{{subscribeBtnTxt}}</cube-button>
@@ -399,6 +403,19 @@
   box-sizing: border-box;
   background: #fff;
   outline: none;
+}
+.redeem_tip {
+  line-height: 15px;
+  padding-top: 5px;
+}
+.redeem_tip i{
+  font-size: 12px;
+  color: #ff5251;
+  padding: 0 5px;
+}
+.redeem_tip span{
+  font-size: 12px;
+  color: #ff5251;
 }
 .btn_area{
   margin-top: 30px;
