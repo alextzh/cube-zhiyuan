@@ -31,12 +31,6 @@
   import {setUserInfo, setPosition, getPosition} from 'common/js/storage'
   import {getMd5, getBJDate} from 'common/js/tool'
   import {showToast, showAlert} from 'common/js/cubeTool'
-  import {Base64} from 'common/js/base64'
-
-  const base64 = new Base64()
-  const AUTO = window.localStorage.getItem('__auto__')
-  const PHONE = window.localStorage.getItem('__phone__')
-  const PWD = window.localStorage.getItem('__pwd__')
 
   export default{
     name: 'login',
@@ -102,45 +96,8 @@
     },
     created() {
       this.$i18n.locale = this.$route.params.lang === 'zh' ? 'zh' : this.$route.params.lang === 'en' ? 'en' : 'tw'
-      if (AUTO === 'Y' && PHONE && PWD) {
-        this.autoLogin(base64.decode(PHONE), base64.decode(PWD))
-      }
     },
     methods: {
-      autoLogin(phone, pwd) {
-        $.ajax({
-          type: 'POST',
-          url: API.api + '/api/v1/login',
-          data: {
-            phone: phone,
-            pwd: pwd
-          },
-          dataType: 'json',
-          asyn: false,
-          headers: {
-            'content-type': 'application/x-www-form-urlencoded',
-            'secret_key': getMd5(),
-            'time_stamp': getBJDate().getTime()
-          },
-          success: (data) => {
-            if (!data.ret) {
-              showToast(data.msg, 'warn')
-              return false
-            }
-            setUserInfo(data.obj)
-            showToast(data.msg, 'correct')
-            setTimeout(() => {
-              this.$router.push({
-                path: '/' + this.$i18n.locale
-              })
-            }, 500)
-          },
-          error: (err) => {
-            console.log(err)
-            showToast(this.netWork, 'error')
-          }
-        })
-      },
       onFocus() {
         setTimeout(() => {
           const pannel = document.getElementById('box')
@@ -225,11 +182,6 @@
                 console.log(err)
               }
             })
-            if (!AUTO) {
-              window.localStorage.setItem('__auto__', 'N')
-            }
-            window.localStorage.setItem('__phone__', base64.encode(userInfo.phone))
-            window.localStorage.setItem('__pwd__', base64.encode(userInfo.pwd))
             setUserInfo(data.obj)
             showToast(data.msg, 'correct')
             setTimeout(() => {

@@ -23,11 +23,6 @@
           <span class="text">{{$t('setting.language')}}</span>
           <span class="value" >{{currentLanguage}}</span>
         </div>
-        <div class="item">
-          <i class="iconfont icon-qiehuan" style="color:#ff5251;"></i>
-          <span class="text">自动登录</span>
-          <cube-switch v-model="isAuto" @click="changeState"></cube-switch>
-        </div>
         <div class="btn_area">
           <cube-button @click="loginOut()">{{$t('setting.logOut')}}</cube-button>
         </div>
@@ -46,8 +41,7 @@
       return {
         showClose: false,
         pickerArr: [{text: '简体中文', value: 0, type: 'zh'}, {text: 'English', value: 1, type: 'en'}, {text: '繁体中文', value: 2, type: 'tw'}],
-        currentLanguage: '',
-        isAuto: false
+        currentLanguage: ''
       }
     },
     computed: {
@@ -71,22 +65,7 @@
       }
     },
     created() {
-      const AUTO = window.localStorage.getItem('__auto__')
-      console.log(AUTO)
       this.$i18n.locale = this.$route.params.lang === 'zh' ? 'zh' : this.$route.params.lang === 'en' ? 'en' : 'tw'
-      this.isAuto = AUTO === 'Y' ? true : AUTO === 'N' ? false : null
-    },
-    watch: {
-      isAuto(newVal) {
-        console.log(newVal)
-        if (newVal) {
-          window.localStorage.setItem('__auto__', 'Y')
-          showToast('自动登录已开启', 'correct')
-        } else {
-          window.localStorage.setItem('__auto__', 'N')
-          showToast('自动登录已关闭', 'correct')
-        }
-      }
     },
     mounted() {
       if (this.$i18n.locale === 'zh') {
@@ -101,23 +80,12 @@
       back() {
         this.$router.back()
       },
-      changeState() {
-        if (!this.isAuto) {
-          window.localStorage.setItem('__auto__', 'Y')
-          showToast('自动登录已开启', 'correct')
-        } else {
-          window.localStorage.setItem('__auto__', 'N')
-          showToast('自动登录已关闭', 'correct')
-        }
-      },
       loginOut() {
         showDialog(this.quitTip, this.tip1, this.confirm, this.cancel, this.confirmFn, this.cancelFn)
       },
       confirmFn() {
         clearStorage()
         showToast(this.tip2, 'correct')
-        window.localStorage.removeItem('__phone__')
-        window.localStorage.removeItem('__pwd__')
         setTimeout(() => {
           this.$router.push({
             path: '/login/' + this.$i18n.locale

@@ -18,7 +18,7 @@ import {
 import fastclick from 'fastclick'
 import AMap from 'vue-amap'
 import i18n from './language'
-// import 'common/js/browser.js'
+import 'common/js/browser.js'
 
 import 'common/css/index.css'
 

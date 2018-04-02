@@ -170,6 +170,7 @@ export default {
   setting: {
     language: 'Language',
     modifyPwd: 'Modify Password',
+    autoLogin: 'Auto Login',
     logOut: 'Log Out',
     tip1: 'Are you sure you want to leave this account?',
     tip2: 'Exit Success'

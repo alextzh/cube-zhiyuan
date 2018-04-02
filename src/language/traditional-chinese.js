@@ -170,6 +170,7 @@ export default {
   setting: {
     language: '切換語言',
     modifyPwd: '修改密碼',
+    autoLogin: '自動登錄',
     logOut: '退出',
     tip1: '您確認要退出該賬戶嗎',
     tip2: '退出成功'
