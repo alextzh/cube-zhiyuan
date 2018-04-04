@@ -17,6 +17,13 @@
             </div>
           </div>
         </div>
+        <div class="item-box">
+          <div class="item" @click="toItem('JZGG')">
+            <div class="item_left">
+              <span class="title">3、{{$t('notice.noticeItem3')}}</span>
+            </div>
+          </div>
+        </div>
       </div>
       <div v-if="hasData">
         <div class="no_data">

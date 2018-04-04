@@ -61,7 +61,7 @@
       title: function() {
         const id = this.$route.path.split('/')[2]
         this.id = id
-        return id === 'PTGG' ? this.$i18n.t('navigator.systemNotice') : id === 'CPGG' ? this.$i18n.t('navigator.productNotice') : ''
+        return id === 'PTGG' ? this.$i18n.t('navigator.systemNotice') : id === 'CPGG' ? this.$i18n.t('navigator.productNotice') : id === 'JZGG' ? this.$i18n.t('navigator.netValueNotice') : ''
       },
       netWork() {
         return this.$i18n.t('common.network')
