@@ -204,6 +204,8 @@
        * 获取申购项目子列表
       */
       getSubProductList(that, cid, pid) {
+        const time_stamp = getBJDate()
+        const secret_key = getMd5()
         $.ajax({
           type: 'POST',
           url: API.api + '/api/v1/product/listByBaseId',
@@ -214,8 +216,8 @@
           dataType: 'json',
           headers: {
             'content-type': 'application/x-www-form-urlencoded',
-            'secret_key': getMd5(),
-            'time_stamp': getBJDate().getTime()
+            'secret_key': secret_key,
+            'time_stamp': time_stamp
           },
           success: (res) => {
             var list = res.obj.list.reverse()
@@ -246,6 +248,8 @@
        * 判断当前项目是否能申购
       */
       itemIsCanPurchase: (that, cid, product_id) => {
+        const time_stamp = getBJDate()
+        const secret_key = getMd5()
         $.ajax({
           type: 'POST',
           url: API.api + '/api/v1/subscribe/validate',
@@ -256,8 +260,8 @@
           dataType: 'json',
           headers: {
             'content-type': 'application/x-www-form-urlencoded',
-            'secret_key': getMd5(),
-            'time_stamp': getBJDate().getTime()
+            'secret_key': secret_key,
+            'time_stamp': time_stamp
           },
           success: (res) => {
             if (!res.ret) {
@@ -329,6 +333,8 @@
       mySubmit: (that, param) => {
         var product_id = that.currentPlan.id
         var purchaseAmt = parseInt(param)
+        const time_stamp = getBJDate()
+        const secret_key = getMd5()
         $.ajax({
           type: 'POST',
           url: API.api + '/api/v1/subscribe/addApply',
@@ -341,8 +347,8 @@
           dataType: 'json',
           headers: {
             'content-type': 'application/x-www-form-urlencoded',
-            'secret_key': getMd5(),
-            'time_stamp': getBJDate().getTime()
+            'secret_key': secret_key,
+            'time_stamp': time_stamp
           },
           success: (res) => {
             if (!res.ret) {

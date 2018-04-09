@@ -133,6 +133,8 @@
         this.$router.back()
       },
       getContractList() {
+        const time_stamp = getBJDate()
+        const secret_key = getMd5()
         $.ajax({
           type: 'POST',
           url: API.api + '/api/v1/contract/myContract',
@@ -142,8 +144,8 @@
           dataType: 'json',
           headers: {
             'content-type': 'application/x-www-form-urlencoded',
-            'secret_key': getMd5(),
-            'time_stamp': getBJDate().getTime()
+            'secret_key': secret_key,
+            'time_stamp': time_stamp
           },
           success: (res) => {
             this.loading.hide()

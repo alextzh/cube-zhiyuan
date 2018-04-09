@@ -98,6 +98,8 @@
         this.$router.back()
       },
       _getPurchaseList() {
+        const time_stamp = getBJDate()
+        const secret_key = getMd5()
         $.ajax({
           type: 'POST',
           url: API.api + '/api/v1/test/product/mySub',
@@ -105,8 +107,8 @@
           dataType: 'json',
           headers: {
             'content-type': 'application/x-www-form-urlencoded',
-            'secret_key': getMd5(),
-            'time_stamp': getBJDate().getTime()
+            'secret_key': secret_key,
+            'time_stamp': time_stamp
           },
           success: (res) => {
             this.loading.hide()
@@ -139,6 +141,8 @@
         showDialog('提示', `您确认要赎回当前产品吗`, '确定', '取消', this.confirmFn, this.cancelFn)
       },
       confirmFn() {
+        const time_stamp = getBJDate()
+        const secret_key = getMd5()
         $.ajax({
           type: 'POST',
           url: API.api + '/api/v1/test/product/updateStatus',
@@ -149,8 +153,8 @@
           dataType: 'json',
           headers: {
             'content-type': 'application/x-www-form-urlencoded',
-            'secret_key': getMd5(),
-            'time_stamp': getBJDate().getTime()
+            'secret_key': secret_key,
+            'time_stamp': time_stamp
           },
           success: (res) => {
             if (!res.ret) {

@@ -2,32 +2,23 @@
   <transition name="slide">
     <div class="m-container">
       <navbar :title="$t('navigator.notice')" @back="back" :showClose="showClose"></navbar>
-      <div class="list" v-if="noticeList">
-        <div class="item-box">
-          <div class="item" @click="toItem('PTGG')">
-            <div class="item_left">
-              <span class="title">1、{{$t('notice.noticeItem1')}}</span>
+      <div class="list">
+        <cube-scroll ref="scroll"
+                     v-if="noticeList.length > 0"
+                     :options="options"
+                     @pulling-down="onPullingDown">
+          <div class="item-box" v-for="(item, index) in noticeList" v-bind:key="index">
+            <div class="item" @click="toItem(item.id)">
+              <div class="item_left">
+                <span class="title">{{index + 1}}、{{item.text}}</span>
+              </div>
             </div>
           </div>
-        </div>
-        <div class="item-box">
-          <div class="item" @click="toItem('CPGG')">
-            <div class="item_left">
-              <span class="title">2、{{$t('notice.noticeItem2')}}</span>
-            </div>
+        </cube-scroll>
+        <div v-if="hasData">
+          <div class="no_data">
+            <i class="iconfont icon-nodata"></i>
           </div>
-        </div>
-        <div class="item-box">
-          <div class="item" @click="toItem('JZGG')">
-            <div class="item_left">
-              <span class="title">3、{{$t('notice.noticeItem3')}}</span>
-            </div>
-          </div>
-        </div>
-      </div>
-      <div v-if="hasData">
-        <div class="no_data">
-          <i class="iconfont icon-nodata"></i>
         </div>
       </div>
     </div>
@@ -47,6 +38,16 @@
         showClose: false,
         loading: null,
         noticeList: [],
+        options: {
+          pullDownRefresh: {
+            threshold: 90,
+            stop: 40,
+            txt: '刷新成功'
+          },
+          scrollbar: {
+            fade: true
+          }
+        },
         hasData: false
       }
     },
@@ -77,14 +78,16 @@
         this.$router.back()
       },
       _getNoticeList() {
+        const time_stamp = getBJDate()
+        const secret_key = getMd5()
         $.ajax({
           type: 'POST',
           url: API.api + '/api/v1/notice/caption',
           dataType: 'json',
           headers: {
             'content-type': 'application/x-www-form-urlencoded',
-            'secret_key': getMd5(),
-            'time_stamp': getBJDate().getTime()
+            'secret_key': secret_key,
+            'time_stamp': time_stamp
           },
           success: (res) => {
             this.loading.hide()
@@ -96,6 +99,9 @@
             const list = res.rows
             this.noticeList = list
             this.hasData = false
+            setTimeout(() => {
+              this.$refs.scroll.forceUpdate()
+            }, 20)
           },
           error: (err) => {
             console.log(err)
@@ -103,6 +109,10 @@
             showToast(this.netWork, 'error')
           }
         })
+      },
+      onPullingDown() {
+        // 更新数据
+        this._getNoticeList()
       },
       toItem(id) {
         this.$router.push({
@@ -118,7 +128,10 @@
 
 <style scoped lang="scss">
   .m-container {
-    position: relative;
+    position: fixed;
+    top: 0;
+    bottom: 0;
+    z-index: 100;
     width: 100%;
     background: #fff;
   }
@@ -127,8 +140,6 @@
     top: 50px;
     bottom: 0;
     width: 100%;
-    padding: 10px;
-    box-sizing: border-box;
   }
   .item-box {
     padding-bottom: 10px;

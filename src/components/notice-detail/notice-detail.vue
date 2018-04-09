@@ -14,7 +14,9 @@
             <div class="th">最新净值</div>
           </div>
           <div class="tr" v-for="(item, index) in content" v-bind:key="index">
-            <div class="td">{{item[0]}}</div>
+            <div class="td">
+              <div v-for="(t, i) in item[0]" v-bind:key="i">{{t}}</div>
+            </div>
             <div class="td">{{item[1]}}</div>
             <div class="td">{{item[2]}}</div>
             <div class="td">{{item[3]}}</div>
@@ -55,11 +57,26 @@
       },
       handleStr(str) {
         const _str = str.trim()
-        const arr = _str.split('\x0a')
+        const arr = _str.split('&').slice(1)
         const _arr = arr.map((item) => {
           return item.split('|')
         })
+        for (let i = 0; i < _arr.length; i++) {
+          if (_arr[i][0].length > 6) {
+            _arr[i][0] = this.cutStr(_arr[i][0])
+          } else {
+            _arr[i][0] = this.toArray(_arr[i][0])
+          }
+        }
         return _arr
+      },
+      cutStr(str) {
+        const _str = str.substr(0, 2) + '|' + str.slice(2)
+        return _str.split('|')
+      },
+      toArray(str) {
+        const _str = '|' + str
+        return _str.split('|').slice(1)
       }
     },
     components: {
@@ -135,6 +152,10 @@
     text-align: center;
     width:100%;
     box-sizing: border-box;
+    display:flex;
+    flex-direction:column;
+    justify-content:center;
+    line-height: 1.5;
   }
   .th::after, .td::after{
     content: "";

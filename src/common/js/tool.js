@@ -49,7 +49,7 @@ export function _normalizeStr(str) {
 }
 
 export function getMd5() {
-  const timestamp = getBJDate().getTime()
+  const timestamp = getBJDate()
   const key = 'zhiyuancp'
   const str = `${timestamp}${key}`
   return Md5(str)
@@ -97,5 +97,5 @@ export function getBJDate() {
     time_zone -= 8
     currentDate.setHours(tmpHours - time_zone)
   }
-  return currentDate
+  return currentDate.getTime()
 }

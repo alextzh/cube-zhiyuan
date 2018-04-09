@@ -105,6 +105,8 @@
           phone: param.mobile.trim(),
           pwd: param.password.trim()
         }
+        const time_stamp = getBJDate()
+        const secret_key = getMd5()
         $.ajax({
           type: 'POST',
           url: API.api + '/api/v1/login',
@@ -113,8 +115,8 @@
           asyn: false,
           headers: {
             'content-type': 'application/x-www-form-urlencoded',
-            'secret_key': getMd5(),
-            'time_stamp': getBJDate().getTime()
+            'secret_key': secret_key,
+            'time_stamp': time_stamp
           },
           success: (data) => {
             if (!data.ret) {
@@ -124,6 +126,8 @@
               return false
             }
             const customer_id = data.obj.id
+            const time_stamp = getBJDate()
+            const secret_key = getMd5()
             $.ajax({
               type: 'POST',
               url: API.api + '/api/v1/location/report',
@@ -135,8 +139,8 @@
               dataType: 'json',
               headers: {
                 'content-type': 'application/x-www-form-urlencoded',
-                'secret_key': getMd5(),
-                'time_stamp': getBJDate().getTime()
+                'secret_key': secret_key,
+                'time_stamp': time_stamp
               },
               success: (res) => {
                 if (!res.ret) {

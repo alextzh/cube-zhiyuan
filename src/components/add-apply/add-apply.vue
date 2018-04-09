@@ -151,6 +151,8 @@
        * 获取申购项目子列表
       */
       getSubProductList(id) {
+        const time_stamp = getBJDate()
+        const secret_key = getMd5()
         $.ajax({
           type: 'POST',
           url: API.api + '/api/v1/product/listByBaseId',
@@ -160,8 +162,8 @@
           dataType: 'json',
           headers: {
             'content-type': 'application/x-www-form-urlencoded',
-            'secret_key': getMd5(),
-            'time_stamp': getBJDate().getTime()
+            'secret_key': secret_key,
+            'time_stamp': time_stamp
           },
           success: (res) => {
             var list = res.obj.list.reverse()
@@ -239,6 +241,8 @@
         var subscribeAmt = parseInt(param)
         var product_id = that.currentPlan.id
         var customer_id = getUserInfo().id
+        const time_stamp = getBJDate()
+        const secret_key = getMd5()
         $.ajax({
           type: 'POST',
           url: API.api + '/api/v1/subscribe/addRecast',
@@ -250,8 +254,8 @@
           dataType: 'json',
           headers: {
             'content-type': 'application/x-www-form-urlencoded',
-            'secret_key': getMd5(),
-            'time_stamp': getBJDate().getTime()
+            'secret_key': secret_key,
+            'time_stamp': time_stamp
           },
           success: (res) => {
             if (!res.ret) {

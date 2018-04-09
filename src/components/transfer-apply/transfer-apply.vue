@@ -194,14 +194,16 @@
        * 获取申请划款可以选择的项目
       */
       getSubProductList() {
+        const time_stamp = getBJDate()
+        const secret_key = getMd5()
         $.ajax({
           type: 'POST',
           url: API.api + '/api/v1/deduct/productList',
           dataType: 'json',
           headers: {
             'content-type': 'application/x-www-form-urlencoded',
-            'secret_key': getMd5(),
-            'time_stamp': getBJDate().getTime()
+            'secret_key': secret_key,
+            'time_stamp': time_stamp
           },
           success: (res) => {
             if (!res.ret) {
@@ -295,6 +297,8 @@
       mySubmit: (that, param) => {
         var product_id = that.currentPlan.id
         var transferAmt = parseInt(param)
+        const time_stamp = getBJDate()
+        const secret_key = getMd5()
         $.ajax({
           type: 'POST',
           url: API.api + '/api/v1/deduct/apply',
@@ -308,8 +312,8 @@
           dataType: 'json',
           headers: {
             'content-type': 'application/x-www-form-urlencoded',
-            'secret_key': getMd5(),
-            'time_stamp': getBJDate().getTime()
+            'secret_key': secret_key,
+            'time_stamp': time_stamp
           },
           success: (res) => {
             if (!res.ret) {
